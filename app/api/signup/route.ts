@@ -8,7 +8,17 @@ function getResend() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { firstName, email, phone } = await req.json();
+    const { firstName, email, phone, company, _t } = await req.json();
+
+    // Honeypot check — bots fill hidden fields
+    if (company) {
+      return NextResponse.json({ success: true }); // Silent fail
+    }
+
+    // Time check — form submitted too fast (< 3 seconds = bot)
+    if (typeof _t === "number" && _t < 3000) {
+      return NextResponse.json({ success: true }); // Silent fail
+    }
 
     if (!firstName || !email || !phone) {
       return NextResponse.json(

@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 export function SignupForm() {
-  const [form, setForm] = useState({ firstName: "", email: "", phone: "" });
+  const [form, setForm] = useState({ firstName: "", email: "", phone: "", company: "" });
+  const [loadedAt] = useState(Date.now());
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -16,7 +17,7 @@ export function SignupForm() {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, _t: Date.now() - loadedAt }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
@@ -90,6 +91,18 @@ export function SignupForm() {
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
           className="w-full px-4 py-3 bg-white/60 border border-[var(--rule)] text-[var(--ink)] placeholder-[var(--ink-faint)] focus:border-[var(--accent)] focus:outline-none transition-colors font-sans text-sm"
           placeholder="+44 7000 000000"
+        />
+      </div>
+
+      {/* Honeypot - hidden from humans */}
+      <div className="absolute opacity-0 pointer-events-none" style={{ position: "absolute", left: "-9999px" }} aria-hidden="true">
+        <input
+          type="text"
+          name="company"
+          tabIndex={-1}
+          autoComplete="off"
+          value={form.company}
+          onChange={(e) => setForm({ ...form, company: e.target.value })}
         />
       </div>
 
