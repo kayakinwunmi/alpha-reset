@@ -4,8 +4,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 export function AudioPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const ctxRef = useRef<AudioContext | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.4);
   const [showVol, setShowVol] = useState(false);
@@ -15,51 +13,34 @@ export function AudioPlayer() {
     if (started) return;
     const audio = audioRef.current;
     if (!audio) return;
-
-    // Create Web Audio context on user gesture
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const source = ctx.createMediaElementSource(audio);
-    const gain = ctx.createGain();
-    gain.gain.value = volume;
-    source.connect(gain).connect(ctx.destination);
-
-    ctxRef.current = ctx;
-    gainRef.current = gain;
-
-    // Resume context (needed for Chrome)
-    ctx.resume().then(() => {
-      audio.play().then(() => {
-        setPlaying(true);
-        setStarted(true);
-      }).catch(() => {});
-    });
+    audio.volume = volume;
+    audio.play().then(() => {
+      setPlaying(true);
+      setStarted(true);
+    }).catch(() => {});
   }, [started, volume]);
 
-  // Start on first user interaction
+  // Start on scroll past 5% of page
   useEffect(() => {
-    const events = ["click", "scroll", "touchstart", "keydown"];
-    const handler = () => {
-      startPlayback();
-      events.forEach((e) => window.removeEventListener(e, handler));
+    const onScroll = () => {
+      const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+      if (scrollPercent >= 0.05) {
+        startPlayback();
+        window.removeEventListener("scroll", onScroll);
+      }
     };
-    events.forEach((e) => window.addEventListener(e, handler, { once: true, passive: true }));
-    return () => events.forEach((e) => window.removeEventListener(e, handler));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [startPlayback]);
 
   const toggle = () => {
     const audio = audioRef.current;
     if (!audio) return;
-
-    if (!started) {
-      startPlayback();
-      return;
-    }
-
     if (playing) {
       audio.pause();
       setPlaying(false);
     } else {
-      ctxRef.current?.resume();
+      audio.volume = volume;
       audio.play().then(() => setPlaying(true)).catch(() => {});
     }
   };
@@ -67,7 +48,6 @@ export function AudioPlayer() {
   const changeVolume = (v: number) => {
     const clamped = Math.max(0, Math.min(1, Math.round(v * 20) / 20));
     setVolume(clamped);
-    if (gainRef.current) gainRef.current.gain.value = clamped;
     if (audioRef.current) audioRef.current.volume = clamped;
   };
 
@@ -82,7 +62,6 @@ export function AudioPlayer() {
           onMouseEnter={() => setShowVol(true)}
           onMouseLeave={() => setShowVol(false)}
         >
-          {/* Play/Pause */}
           <button
             onClick={toggle}
             className="flex items-center justify-center w-5 h-5"
@@ -100,7 +79,6 @@ export function AudioPlayer() {
             )}
           </button>
 
-          {/* Sound wave bars */}
           <div className="flex items-end gap-[2.5px] h-3.5">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
@@ -109,41 +87,20 @@ export function AudioPlayer() {
                 style={{
                   background: "var(--accent)",
                   height: playing ? undefined : "3px",
-                  animation: playing
-                    ? `wave 1.2s ease-in-out ${i * 0.15}s infinite`
-                    : "none",
+                  animation: playing ? `wave 1.2s ease-in-out ${i * 0.15}s infinite` : "none",
                 }}
               />
             ))}
           </div>
 
-          {/* Volume — expand on hover */}
           <div
             className={`flex items-center gap-1.5 overflow-hidden transition-all duration-300 ${
               showVol ? "w-24 opacity-100" : "w-0 opacity-0"
             }`}
           >
-            <button
-              onClick={() => changeVolume(volume - 0.1)}
-              className="text-[var(--ink-faint)] hover:text-[var(--ink)] text-xs font-sans flex-shrink-0"
-            >
-              −
-            </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={volume}
-              onChange={(e) => changeVolume(parseFloat(e.target.value))}
-              className="w-14 h-0.5 appearance-none bg-[var(--rule)] rounded-full cursor-pointer accent-[var(--accent)]"
-            />
-            <button
-              onClick={() => changeVolume(volume + 0.1)}
-              className="text-[var(--ink-faint)] hover:text-[var(--ink)] text-xs font-sans flex-shrink-0"
-            >
-              +
-            </button>
+            <button onClick={() => changeVolume(volume - 0.1)} className="text-[var(--ink-faint)] hover:text-[var(--ink)] text-xs font-sans flex-shrink-0">−</button>
+            <input type="range" min={0} max={1} step={0.05} value={volume} onChange={(e) => changeVolume(parseFloat(e.target.value))} className="w-14 h-0.5 appearance-none bg-[var(--rule)] rounded-full cursor-pointer accent-[var(--accent)]" />
+            <button onClick={() => changeVolume(volume + 0.1)} className="text-[var(--ink-faint)] hover:text-[var(--ink)] text-xs font-sans flex-shrink-0">+</button>
           </div>
         </div>
       </div>
