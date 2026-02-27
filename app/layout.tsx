@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Alpha Reset — Live Like The 1%",
-  description: "A quarterly 3-day water-fasting + life review challenge. Starve the body to feed the spirit and soul.",
+  title: "Alpha Reset — A Personal Invitation",
+  description: "A quarterly 3-day water-fasting + life review challenge. Every quarter, become a completely different human being. By choice.",
   openGraph: {
     title: "Alpha Reset — Live Like The 1%",
     description: "A quarterly 3-day water-fasting + life review challenge.",
@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="bg-black text-white antialiased">
+      <body className="paper-texture antialiased">
         {children}
       </body>
     </html>

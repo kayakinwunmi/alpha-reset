@@ -18,13 +18,8 @@ export function SignupForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
-      }
-
+      if (!res.ok) throw new Error(data.error || "Something went wrong");
       setStatus("success");
     } catch (err: any) {
       setStatus("error");
@@ -34,17 +29,16 @@ export function SignupForm() {
 
   if (status === "success") {
     return (
-      <div className="p-8 border border-[#D4AF37]/30 bg-[#0A0A0A] rounded-sm gold-glow text-center">
-        <span className="text-4xl mb-4 block">🦾</span>
-        <h3 className="text-2xl font-bold text-white mb-2">You&apos;re in.</h3>
-        <p className="text-gray-400 mb-6">
-          Welcome to Alpha Reset. Check your email for details.
+      <div className="py-8 text-center">
+        <p className="text-2xl font-light text-[var(--ink)] mb-4">You&apos;re in.</p>
+        <p className="text-[var(--ink-light)] mb-8">
+          Check your email. See you on the 23rd.
         </p>
         <a
           href="https://getbestdayapp.app.link/5SerCVKw60b"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block px-8 py-3 bg-[#D4AF37] text-black font-bold rounded-sm hover:bg-[#F0D060] transition-all"
+          className="inline-block px-8 py-3 bg-[var(--accent)] text-white font-sans text-sm tracking-wider uppercase hover:bg-[var(--accent-light)] transition-colors"
         >
           Join on Bestday →
         </a>
@@ -53,9 +47,9 @@ export function SignupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 text-left max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-5 text-left max-w-sm mx-auto">
       <div>
-        <label htmlFor="firstName" className="block text-sm text-gray-500 mb-1 uppercase tracking-wider">
+        <label htmlFor="firstName" className="block text-xs font-sans text-[var(--ink-faint)] mb-1.5 uppercase tracking-wider">
           First Name
         </label>
         <input
@@ -64,13 +58,13 @@ export function SignupForm() {
           required
           value={form.firstName}
           onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-          className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-800 rounded-sm text-white placeholder-gray-700 focus:border-[#D4AF37] focus:outline-none transition-colors"
+          className="w-full px-4 py-3 bg-white/60 border border-[var(--rule)] text-[var(--ink)] placeholder-[var(--ink-faint)] focus:border-[var(--accent)] focus:outline-none transition-colors font-sans text-sm"
           placeholder="Your first name"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm text-gray-500 mb-1 uppercase tracking-wider">
+        <label htmlFor="email" className="block text-xs font-sans text-[var(--ink-faint)] mb-1.5 uppercase tracking-wider">
           Email
         </label>
         <input
@@ -79,13 +73,13 @@ export function SignupForm() {
           required
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-800 rounded-sm text-white placeholder-gray-700 focus:border-[#D4AF37] focus:outline-none transition-colors"
+          className="w-full px-4 py-3 bg-white/60 border border-[var(--rule)] text-[var(--ink)] placeholder-[var(--ink-faint)] focus:border-[var(--accent)] focus:outline-none transition-colors font-sans text-sm"
           placeholder="you@example.com"
         />
       </div>
 
       <div>
-        <label htmlFor="phone" className="block text-sm text-gray-500 mb-1 uppercase tracking-wider">
+        <label htmlFor="phone" className="block text-xs font-sans text-[var(--ink-faint)] mb-1.5 uppercase tracking-wider">
           Phone
         </label>
         <input
@@ -94,24 +88,24 @@ export function SignupForm() {
           required
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          className="w-full px-4 py-3 bg-[#0A0A0A] border border-gray-800 rounded-sm text-white placeholder-gray-700 focus:border-[#D4AF37] focus:outline-none transition-colors"
+          className="w-full px-4 py-3 bg-white/60 border border-[var(--rule)] text-[var(--ink)] placeholder-[var(--ink-faint)] focus:border-[var(--accent)] focus:outline-none transition-colors font-sans text-sm"
           placeholder="+44 7000 000000"
         />
       </div>
 
       {status === "error" && (
-        <p className="text-red-500 text-sm">{errorMsg}</p>
+        <p className="text-red-700 text-sm font-sans">{errorMsg}</p>
       )}
 
       <button
         type="submit"
         disabled={status === "loading"}
-        className="w-full py-4 bg-[#D4AF37] text-black font-bold text-lg rounded-sm hover:bg-[#F0D060] transition-all disabled:opacity-50 disabled:cursor-not-allowed tracking-wide"
+        className="w-full py-3.5 bg-[var(--accent)] text-white font-sans text-sm tracking-wider uppercase hover:bg-[var(--accent-light)] transition-colors disabled:opacity-50"
       >
-        {status === "loading" ? "JOINING..." : "I'M IN 🦾"}
+        {status === "loading" ? "Joining..." : "I'm in"}
       </button>
 
-      <p className="text-gray-700 text-xs text-center mt-2">
+      <p className="text-[var(--ink-faint)] text-xs text-center font-sans">
         No spam. Just the reset details.
       </p>
     </form>

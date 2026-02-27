@@ -1,227 +1,314 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { SignupForm } from "./components/SignupForm";
 import { Countdown } from "./components/Countdown";
+import { FAQ } from "./components/FAQ";
+import Image from "next/image";
 
 export default function Home() {
   return (
     <main className="min-h-screen">
-      {/* Hero */}
-      <section className="hero-bg min-h-screen flex flex-col items-center justify-center px-6 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <p className="text-sm uppercase tracking-[0.3em] text-[#D4AF37] mb-6 font-medium">
-            Quarterly Challenge
+      {/* Hero — like the top of a personal letter */}
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+        <Image
+          src="/hero.png"
+          alt="Sunrise on a mountain"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-[#F5F0E8]" />
+        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto -mt-20">
+          <p className="text-white/80 text-sm font-sans tracking-[0.3em] uppercase mb-6">
+            A Personal Invitation
           </p>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 tracking-tight">
-            <span className="gold-gradient">ALPHA</span>{" "}
-            <span className="text-white">RESET</span>
+          <h1 className="text-6xl md:text-8xl font-light text-white mb-6 tracking-tight">
+            Alpha Reset
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-4 font-light">
+          <p className="text-xl md:text-2xl text-white/90 font-light italic">
             Live like the 1%.
           </p>
-          <p className="text-lg text-gray-500 mb-12 max-w-2xl mx-auto">
-            72 hours. Water only. A complete life review.
-            <br />
-            Every quarter, become a completely different human being. By choice.
-          </p>
-
-          <Countdown targetDate="2026-03-23T00:00:00Z" />
-
-          <a
-            href="#signup"
-            className="inline-block mt-10 px-10 py-4 bg-[#D4AF37] text-black font-bold text-lg rounded-sm hover:bg-[#F0D060] transition-all duration-300 tracking-wide"
-          >
-            I&apos;M IN
-          </a>
-        </div>
-
-        <div className="absolute bottom-10 animate-bounce">
-          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
         </div>
       </section>
 
-      {/* The Challenge */}
-      <section className="py-24 px-6 bg-[#0A0A0A]">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold mb-8 text-center">
-            It&apos;s that time of the quarter to <span className="gold-gradient">abstain</span>.
-          </h2>
-          <p className="text-lg text-gray-400 text-center max-w-3xl mx-auto mb-6 leading-relaxed">
-            This 3-day journey is an opportunity for personal growth and transformation.
-            By committing to the challenge, you&apos;re taking a step towards becoming a more
-            disciplined, confident, and powerful individual.
-          </p>
-          <p className="text-lg text-gray-400 text-center max-w-3xl mx-auto leading-relaxed">
-            You&apos;re becoming the top 1%.
-          </p>
-        </div>
-      </section>
+      {/* The Letter */}
+      <section className="py-16 md:py-24 px-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="border-t border-[var(--rule)] pt-12 mb-12" />
 
-      {/* Quote */}
-      <section className="py-20 px-6 border-y border-gray-900">
-        <div className="max-w-3xl mx-auto text-center">
-          <blockquote className="text-2xl md:text-4xl font-light italic text-gray-200 mb-6 leading-relaxed">
+          <p className="text-lg md:text-xl leading-relaxed text-[var(--ink)] mb-8">
+            Every quarter, I take 3 days off. No food. No distractions. Just me, God, and the truth.
+          </p>
+
+          <p className="text-lg md:text-xl leading-relaxed text-[var(--ink-light)] mb-8">
+            It&apos;s called the Alpha Reset — a 72-hour water fast combined with a deep life review.
+            It&apos;s not comfortable. It&apos;s not supposed to be. But by the end of it, you come out
+            clearer, stronger, and more focused than you&apos;ve been in months.
+          </p>
+
+          <p className="text-lg md:text-xl leading-relaxed text-[var(--ink-light)] mb-8">
+            This isn&apos;t a programme you watch from the sidelines. You either do it or you don&apos;t.
+            And if you do it — you&apos;ll understand why I keep coming back every quarter.
+          </p>
+
+          <p className="text-lg md:text-xl leading-relaxed text-[var(--ink)] mb-2">
+            The next one starts{" "}
+            <span className="font-semibold text-[var(--accent)]">23 March 2026</span>.
+          </p>
+
+          <div className="my-12">
+            <Countdown targetDate="2026-03-23T00:00:00Z" />
+          </div>
+
+          <div className="border-t border-[var(--rule)] my-16" />
+
+          {/* Quote */}
+          <blockquote className="text-2xl md:text-3xl font-light italic text-[var(--ink)] leading-relaxed my-12 pl-6 border-l-2 border-[var(--accent)]">
             &ldquo;Discipline is doing what you hate like you love it.&rdquo;
+            <cite className="block text-base not-italic text-[var(--ink-faint)] mt-4">— Mike Tyson</cite>
           </blockquote>
-          <cite className="text-[#D4AF37] text-lg not-italic">— Mike Tyson</cite>
+
+          <div className="border-t border-[var(--rule)] my-16" />
         </div>
       </section>
 
-      {/* What is an Alpha */}
-      <section className="py-24 px-6 bg-[#050505]">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 text-center">
-            Who is an <span className="gold-gradient">Alpha</span>?
+      {/* The 3 Days */}
+      <section className="py-12 px-6 bg-[var(--paper-dark)]">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-light text-[var(--ink)] mb-16 text-center">
+            The Three Days
           </h2>
-          <p className="text-gray-500 text-center mb-16 text-lg">
-            This journey is about starving the body to feed your spirit and soul.
-          </p>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {[
-              { icon: "⚔️", text: "Disciplined, confident, powerful" },
-              { icon: "🎯", text: "Don't leave things to chance" },
-              { icon: "🛡️", text: "Protect and provide for people around them" },
-              { icon: "🔥", text: "Embrace pain and discomfort" },
-              { icon: "📐", text: "Set impossibly high standards" },
-              { icon: "🚀", text: "Never coast through life aimlessly" },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 p-5 bg-[#0A0A0A] border border-gray-900 rounded-sm hover:border-[#D4AF37]/30 transition-colors"
-              >
-                <span className="text-2xl">{item.icon}</span>
-                <span className="text-gray-300 text-lg">{item.text}</span>
-              </div>
-            ))}
+          {/* Day 1 */}
+          <div className="mb-16">
+            <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-3">
+              Day One
+            </h3>
+            <h4 className="text-2xl md:text-3xl font-light text-[var(--ink)] mb-6">Reset</h4>
+            <p className="text-lg leading-relaxed text-[var(--ink-light)] mb-6">
+              Clear the distractions. Shut down the phone, turn off the TV, and get away from the noise.
+              This isn&apos;t about relaxation — it&apos;s about facing yourself. Confront the digital addiction.
+              Look deep inside and figure out what&apos;s really important and what&apos;s just noise.
+            </p>
+            <div className="pl-6 border-l border-[var(--rule)]">
+              <p className="text-sm font-sans uppercase tracking-wider text-[var(--ink-faint)] mb-3">Reflect on</p>
+              <ul className="space-y-2 text-[var(--ink-light)]">
+                <li>What digital distractions have I relied on?</li>
+                <li>How do I feel without constant access to social media?</li>
+                <li>What activities can replace digital consumption?</li>
+                <li>How is my mental clarity improving without the noise?</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Day 2 */}
+          <div className="mb-16">
+            <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-3">
+              Day Two
+            </h3>
+            <h4 className="text-2xl md:text-3xl font-light text-[var(--ink)] mb-6">Reflect</h4>
+            <p className="text-lg leading-relaxed text-[var(--ink-light)] mb-6">
+              By day two, your body is screaming for food. You&apos;re an alpha — you can handle pain.
+              Take a hard look at the past ninety days. No excuses. What did you accomplish? What got in your way?
+              Find the lessons hidden in there. This isn&apos;t about dwelling on failures — it&apos;s about
+              learning from them.
+            </p>
+            <div className="my-8 relative h-64 md:h-80 rounded-sm overflow-hidden">
+              <Image
+                src="/journal.png"
+                alt="Journaling and reflection"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="pl-6 border-l border-[var(--rule)]">
+              <p className="text-sm font-sans uppercase tracking-wider text-[var(--ink-faint)] mb-3">Reflect on</p>
+              <ul className="space-y-2 text-[var(--ink-light)]">
+                <li>What were my primary goals in the past 90 days?</li>
+                <li>Which goals did I achieve, and how?</li>
+                <li>Which goals did I struggle with, and why?</li>
+                <li>What lessons have I learned from both successes and failures?</li>
+                <li>How have my values and priorities shifted?</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Day 3 */}
+          <div className="mb-16">
+            <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-3">
+              Day Three
+            </h3>
+            <h4 className="text-2xl md:text-3xl font-light text-[var(--ink)] mb-6">Focus</h4>
+            <p className="text-lg leading-relaxed text-[var(--ink-light)] mb-6">
+              Congratulations — you made it to day 3 with no food. You&apos;re telling your body and mind:
+              you&apos;re in control. Now it&apos;s time to look forward. What are your goals for the next 90 days?
+              What&apos;s the mission? Stop dreaming and start planning. Make a real plan — not a wish list.
+              Imagine you&apos;re going to war. Will you lead yourself to victory?
+            </p>
+            <div className="pl-6 border-l border-[var(--rule)]">
+              <p className="text-sm font-sans uppercase tracking-wider text-[var(--ink-faint)] mb-3">Reflect on</p>
+              <ul className="space-y-2 text-[var(--ink-light)]">
+                <li>What are my top three priorities for the next 90 days?</li>
+                <li>What specific actions will I take?</li>
+                <li>What obstacles might I face, and how can I overcome them?</li>
+                <li>What am I going to stop doing?</li>
+                <li>Who will hold me accountable?</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Scripture */}
-      <section className="py-20 px-6 bg-[#0A0A0A]">
-        <div className="max-w-3xl mx-auto text-center">
-          <blockquote className="text-xl md:text-3xl font-light italic text-gray-300 mb-6 leading-relaxed">
+      <section className="py-20 px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <blockquote className="text-2xl md:text-3xl font-light italic text-[var(--ink)] leading-relaxed">
             &ldquo;Man shall not live by bread alone, but by every word that comes out of the mouth of God.&rdquo;
           </blockquote>
-          <cite className="text-[#D4AF37] not-italic">— Matthew 4:4</cite>
+          <cite className="block text-base not-italic text-[var(--ink-faint)] mt-6">— Matthew 4:4</cite>
         </div>
       </section>
 
-      {/* What You Do / Avoid */}
-      <section className="py-24 px-6 bg-[#050505]">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold mb-16 text-center">
-            The <span className="gold-gradient">Protocol</span>
+      {/* The Protocol */}
+      <section className="py-16 px-6 bg-[var(--paper-dark)]">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-light text-[var(--ink)] mb-12 text-center">
+            The Protocol
           </h2>
 
           <div className="grid md:grid-cols-2 gap-12">
-            {/* Do */}
             <div>
-              <h3 className="text-xl font-bold text-[#D4AF37] mb-6 uppercase tracking-wider">
-                What You Do
+              <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-6">
+                What you do
               </h3>
-              <ul className="space-y-4">
-                {[
-                  "Set an intention for the journey",
-                  "Walk or run every day",
-                  "Water & coffee only",
-                  "Read books, podcasts, audiobooks",
-                  "Pray. Pray. Pray.",
-                  "Sleep early, wake early",
-                  "Quiet time & meditation",
-                  "Review last 90 days (written)",
-                  "Set direction for next 90 days",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="text-green-500 mt-1 text-lg">✓</span>
-                    <span className="text-gray-300">{item}</span>
-                  </li>
-                ))}
+              <ul className="space-y-3 text-lg text-[var(--ink-light)]">
+                <li>Set an intention for the journey</li>
+                <li>Walk or run every day</li>
+                <li>Water &amp; coffee only</li>
+                <li>Read, listen to podcasts, audiobooks</li>
+                <li>Pray. Pray. Pray.</li>
+                <li>Sleep early, wake early</li>
+                <li>Quiet time &amp; meditation</li>
+                <li>Review last 90 days (written)</li>
+                <li>Set direction for next 90 days</li>
               </ul>
             </div>
 
-            {/* Avoid */}
             <div>
-              <h3 className="text-xl font-bold text-red-500 mb-6 uppercase tracking-wider">
-                What You Avoid
+              <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--ink-light)] mb-6">
+                What you avoid
               </h3>
-              <ul className="space-y-4">
-                {[
-                  "Social media binges",
-                  "Porn, smoking, sex",
-                  "Video games, junk Netflix",
-                  "Reading junk, negative thinking",
-                  "Waking late, being idle",
-                  "Messy environment",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="text-red-500 mt-1 text-lg">✕</span>
-                    <span className="text-gray-400">{item}</span>
-                  </li>
-                ))}
+              <ul className="space-y-3 text-lg text-[var(--ink-faint)]">
+                <li>Social media binges</li>
+                <li>Porn, smoking, sex</li>
+                <li>Video games, junk Netflix</li>
+                <li>Negative thinking, junk reading</li>
+                <li>Waking late, being idle</li>
+                <li>Messy environment</li>
               </ul>
             </div>
+          </div>
+
+          {/* Tips */}
+          <div className="border-t border-[var(--rule)] mt-16 pt-12">
+            <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-6">
+              Tips for making the most of it
+            </h3>
+            <ul className="space-y-2 text-[var(--ink-light)] text-lg">
+              <li>Schedule time for meditation, prayer, worship, and silence</li>
+              <li>Read books or watch films that inspire you</li>
+              <li>Review your life vision, mission, and core values</li>
+              <li>Go for a walk in nature</li>
+              <li>Drink plenty of water (or black coffee)</li>
+              <li>Journal</li>
+              <li>Remember — these 3 days are for <em>you</em></li>
+            </ul>
+          </div>
+
+          {/* Breaking the fast */}
+          <div className="border-t border-[var(--rule)] mt-12 pt-12">
+            <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-6">
+              Breaking the fast safely
+            </h3>
+            <ul className="space-y-2 text-[var(--ink-light)] text-lg">
+              <li>Start with easily digestible foods — clear broths, diluted fruit juices, or yogurt</li>
+              <li>Avoid overeating immediately after your fast</li>
+              <li>Continue drinking plenty of water and herbal teas</li>
+              <li>Choose whole foods: fruits, vegetables, lean proteins, complex carbs</li>
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* Results */}
-      <section className="py-24 px-6 bg-[#0A0A0A]">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            After <span className="gold-gradient">3 Days</span>
-          </h2>
-          <p className="text-gray-500 mb-16 text-lg">You will feel the difference.</p>
+      {/* Brotherhood image */}
+      <section className="relative h-64 md:h-96">
+        <Image
+          src="/brotherhood.png"
+          alt="Brotherhood"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--paper-dark)] via-transparent to-[var(--paper)]" />
+      </section>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* What happens after */}
+      <section className="py-16 px-6">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-light text-[var(--ink)] mb-12 text-center">
+            After Three Days
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-8 text-center">
             {[
-              { icon: "🙏", title: "Connected to God", desc: "Deeper spiritual clarity" },
-              { icon: "⚡", title: "Alive", desc: "Cells renewed, mind sharp" },
-              { icon: "🎯", title: "Clear Purpose", desc: "Confident direction for the next 90 days" },
-              { icon: "🦁", title: "Brave", desc: "You defeated your demon" },
-              { icon: "💪", title: "Stronger", desc: "Mental and physical fortitude" },
-              { icon: "❤️", title: "Better Relationships", desc: "Deeper family connections" },
+              { text: "More connected to God" },
+              { text: "Alive — cells renewed, mind sharp" },
+              { text: "Confident with clear purpose" },
+              { text: "Brave — you defeated your demon" },
+              { text: "Stronger than before" },
+              { text: "Better family relationships" },
             ].map((item, i) => (
-              <div
-                key={i}
-                className="p-6 bg-[#0F0F0F] border border-gray-900 rounded-sm text-center hover:border-[#D4AF37]/30 transition-colors"
-              >
-                <span className="text-3xl mb-3 block">{item.icon}</span>
-                <h3 className="text-lg font-bold text-white mb-1">{item.title}</h3>
-                <p className="text-gray-500 text-sm">{item.desc}</p>
-              </div>
+              <p key={i} className="text-lg text-[var(--ink-light)] py-4 border-b border-[var(--rule)] last:border-0">
+                {item.text}
+              </p>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA / Signup */}
-      <section id="signup" className="py-24 px-6 bg-[#050505] border-t border-gray-900">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Ready to <span className="gold-gradient">Reset</span>?
+      {/* FAQ */}
+      <FAQ />
+
+      {/* Signup — the invitation */}
+      <section id="signup" className="py-20 px-6 bg-[var(--paper-dark)]">
+        <div className="max-w-xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-light text-[var(--ink)] mb-4">
+            Join Us
           </h2>
-          <p className="text-gray-400 mb-4 text-lg">
-            Next session: <span className="text-[#D4AF37] font-semibold">23–25 March 2026</span>
+          <p className="text-lg text-[var(--ink-light)] mb-3">
+            Next session: <span className="font-semibold text-[var(--accent)]">23–25 March 2026</span>
           </p>
-          <p className="text-gray-500 mb-12">
-            G-check yourself every 90 days. Join the challenge.
+          <p className="text-[var(--ink-faint)] mb-10 font-sans text-sm">
+            Alpha Reset is free. You&apos;ll need a{" "}
+            <a href="https://getbestdayapp.app.link/5SerCVKw60b" target="_blank" rel="noopener noreferrer" className="underline text-[var(--accent)]">
+              Bestday Premium + AI
+            </a>{" "}
+            membership ($249/year) to join the group.
           </p>
 
           <SignupForm />
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-gray-900 text-center">
-        <p className="text-gray-600 text-sm">
-          Alpha Reset © {new Date().getFullYear()}. Every quarter, become a completely different human being.
+      {/* Close — like a letter signature */}
+      <footer className="py-16 px-6 text-center">
+        <p className="text-lg italic text-[var(--ink-light)] mb-6">
+          Every quarter, become a completely different human being. By choice.
         </p>
+        <p className="text-[var(--ink)]">— Kay</p>
+        <div className="border-t border-[var(--rule)] mt-12 pt-6">
+          <p className="text-sm text-[var(--ink-faint)] font-sans">
+            Alpha Reset © {new Date().getFullYear()}
+          </p>
+        </div>
       </footer>
     </main>
   );
