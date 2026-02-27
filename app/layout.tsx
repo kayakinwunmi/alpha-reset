@@ -31,7 +31,11 @@ export const metadata: Metadata = {
     title: "Alpha Reset — Live Like The 1%",
     description: "72 hours. No food. No distractions. A quarterly water-fasting + life review challenge.",
     images: ["/og.png"],
-    creator: "@kayakinwunmi",
+    creator: undefined,
+  },
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   },
   robots: {
     index: true,
