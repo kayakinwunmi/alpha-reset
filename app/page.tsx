@@ -4,13 +4,12 @@ import { SignupForm } from "./components/SignupForm";
 import { Countdown } from "./components/Countdown";
 import { FAQ } from "./components/FAQ";
 import { AudioPlayer } from "./components/AudioPlayer";
-import { Entrance } from "./components/Entrance";
+
 import Image from "next/image";
 
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <Entrance />
       <AudioPlayer />
       {/* Hero — like the top of a personal letter */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">

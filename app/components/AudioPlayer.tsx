@@ -4,37 +4,70 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 export function AudioPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const gainRef = useRef<GainNode | null>(null);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(0.4);
   const [showVol, setShowVol] = useState(false);
+  const [started, setStarted] = useState(false);
 
   const startPlayback = useCallback(() => {
-    if (audioRef.current && audioRef.current.paused) {
-      audioRef.current.volume = volume;
-      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
-    }
-  }, [volume]);
+    if (started) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  // Listen for the entrance click to start audio
+    // Create Web Audio context on user gesture
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const source = ctx.createMediaElementSource(audio);
+    const gain = ctx.createGain();
+    gain.gain.value = volume;
+    source.connect(gain).connect(ctx.destination);
+
+    ctxRef.current = ctx;
+    gainRef.current = gain;
+
+    // Resume context (needed for Chrome)
+    ctx.resume().then(() => {
+      audio.play().then(() => {
+        setPlaying(true);
+        setStarted(true);
+      }).catch(() => {});
+    });
+  }, [started, volume]);
+
+  // Start on first user interaction
   useEffect(() => {
-    const handler = () => startPlayback();
-    window.addEventListener("alpha-enter", handler, { once: true });
-    return () => window.removeEventListener("alpha-enter", handler);
+    const events = ["click", "scroll", "touchstart", "keydown"];
+    const handler = () => {
+      startPlayback();
+      events.forEach((e) => window.removeEventListener(e, handler));
+    };
+    events.forEach((e) => window.addEventListener(e, handler, { once: true, passive: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, handler));
   }, [startPlayback]);
 
   const toggle = () => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (!started) {
+      startPlayback();
+      return;
+    }
+
     if (playing) {
-      audioRef.current.pause();
+      audio.pause();
       setPlaying(false);
     } else {
-      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
+      ctxRef.current?.resume();
+      audio.play().then(() => setPlaying(true)).catch(() => {});
     }
   };
 
   const changeVolume = (v: number) => {
     const clamped = Math.max(0, Math.min(1, Math.round(v * 20) / 20));
     setVolume(clamped);
+    if (gainRef.current) gainRef.current.gain.value = clamped;
     if (audioRef.current) audioRef.current.volume = clamped;
   };
 
@@ -44,8 +77,8 @@ export function AudioPlayer() {
 
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center">
         <div
-          className="flex items-center gap-3 backdrop-blur-md border border-[var(--rule)]/40 rounded-full px-4 py-2.5 transition-all"
-          style={{ background: "rgba(245, 240, 232, 0.35)" }}
+          className="flex items-center gap-3 backdrop-blur-md rounded-full px-4 py-2.5 transition-all"
+          style={{ background: "rgba(245, 240, 232, 0.25)", border: "1px solid rgba(212, 200, 176, 0.3)" }}
           onMouseEnter={() => setShowVol(true)}
           onMouseLeave={() => setShowVol(false)}
         >
