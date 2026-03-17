@@ -35,7 +35,7 @@ export async function sendWelcomeEmail(
         You're in. You've made the decision to join the top 1%.
       </p>
       <p style="font-size:16px;line-height:1.6;color:#ccc;margin:0 0 24px;">
-        The next <strong style="color:#D4AF37;">Alpha Reset</strong> begins <strong style="color:#fff;">23 March 2026</strong> — a 72-hour water fast + deep life review that will transform how you think, move, and lead.
+        The next <strong style="color:#D4AF37;">Alpha Reset</strong> begins <strong style="color:#fff;">7 April 2026</strong> — a 72-hour water fast + deep life review that will transform how you think, move, and lead.
       </p>
 
       <div style="background-color:#1a1a0a;border-left:3px solid #D4AF37;padding:16px;border-radius:4px;margin-bottom:24px;">

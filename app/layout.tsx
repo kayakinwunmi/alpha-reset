@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Kay Akinwunmi" }],
   openGraph: {
     title: "Alpha Reset — Live Like The 1%",
-    description: "72 hours. No food. No distractions. A quarterly water-fasting + life review challenge. Join us 23–25 March 2026.",
+    description: "72 hours. No food. No distractions. A quarterly water-fasting + life review challenge. Join us 7–9 April 2026.",
     url: siteUrl,
     siteName: "Alpha Reset",
     images: [

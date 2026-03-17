@@ -56,11 +56,11 @@ export default function Home() {
 
           <p className="text-lg md:text-xl leading-relaxed text-[var(--ink)] mb-2">
             The next one starts{" "}
-            <span className="font-semibold text-[var(--accent)]">23 March 2026</span>.
+            <span className="font-semibold text-[var(--accent)]">7 April 2026</span>.
           </p>
 
           <div className="my-12">
-            <Countdown targetDate="2026-03-23T00:00:00Z" />
+            <Countdown targetDate="2026-04-07T00:00:00Z" />
           </div>
 
           <div className="border-t border-[var(--rule)] my-16" />
@@ -287,7 +287,7 @@ export default function Home() {
             Join Us
           </h2>
           <p className="text-lg text-[var(--ink-light)] mb-3">
-            Next session: <span className="font-semibold text-[var(--accent)]">23–25 March 2026</span>
+            Next session: <span className="font-semibold text-[var(--accent)]">7–9 April 2026</span>
           </p>
           <p className="text-[var(--ink-faint)] mb-10 font-sans text-sm">
             Alpha Reset is free. You&apos;ll need a{" "}

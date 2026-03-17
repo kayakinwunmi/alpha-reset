@@ -1,7 +1,7 @@
 // Alpha Reset email drip sequence
-// Event date: 23 March 2026 00:00 UTC
+// Event date: 7 April 2026 00:00 UTC
 
-export const EVENT_DATE = new Date("2026-03-23T00:00:00Z");
+export const EVENT_DATE = new Date("2026-04-07T00:00:00Z");
 
 export interface DripEmail {
   stage: number;
@@ -37,12 +37,12 @@ That's what Alpha Reset is. It's not comfortable. It's not supposed to be.
 
 But it works.
 
-See you on the 23rd.
+See you on the 7th.
 
 Kay`,
   },
 
-  // Stage 2: "Prep Guide" — 7 days before event (16 March)
+  // Stage 2: "Prep Guide" — 7 days before event (31 March)
   {
     stage: 2,
     subject: "How to prepare for Alpha Reset",
@@ -51,7 +51,7 @@ Kay`,
 
 One week to go. Here's how to set yourself up:
 
-1. Clear your calendar for 23-25 March. Tell people you're offline. No exceptions.
+1. Clear your calendar for 7-9 April. Tell people you're offline. No exceptions.
 
 2. Stock up:
    - Water (lots of it)
@@ -72,29 +72,29 @@ One more thing — don't overthink it. You signed up for a reason. Trust that.
 Kay`,
   },
 
-  // Stage 3: "Final Reminder" — 2 days before event (21 March)
+  // Stage 3: "Final Reminder" — 2 days before event (5 April)
   {
     stage: 3,
     subject: "48 hours to go",
     trigger: { type: "before_event", days: 2 },
     body: (name) => `Hey ${name},
 
-Alpha Reset starts in 48 hours. Midnight on Monday the 23rd.
+Alpha Reset starts in 48 hours. Midnight on Tuesday the 7th.
 
 Eat well today and tomorrow. Hydrate. Get your affairs in order.
 
-Monday night we have a kick-off call at 8pm BST on the Bestday group. Be there.
+Tuesday night we have a kick-off call at 8pm BST on the Bestday group. Be there.
 
 If you haven't joined the group yet: https://getbestdayapp.app.link/5SerCVKw60b
 
 Remember why you signed up. Hold onto that.
 
-See you Monday night.
+See you Tuesday night.
 
 Kay`,
   },
 
-  // Stage 4: Day 1 — "Reset" (23 March)
+  // Stage 4: Day 1 — "Reset" (7 April)
   {
     stage: 4,
     subject: "Day 1: Reset",
@@ -121,7 +121,7 @@ You've got this.
 Kay`,
   },
 
-  // Stage 5: Day 2 — "Reflect" (24 March)
+  // Stage 5: Day 2 — "Reflect" (8 April)
   {
     stage: 5,
     subject: "Day 2: Reflect",
@@ -149,7 +149,7 @@ Keep going.
 Kay`,
   },
 
-  // Stage 6: Day 3 — "Focus" (25 March)
+  // Stage 6: Day 3 — "Focus" (9 April)
   {
     stage: 6,
     subject: "Day 3: Focus",
@@ -175,7 +175,7 @@ Almost there.
 Kay`,
   },
 
-  // Stage 7: Day after — "You Did It" (26 March)
+  // Stage 7: Day after — "You Did It" (10 April)
   {
     stage: 7,
     subject: "You did it 🦾",
@@ -192,7 +192,7 @@ How to break your fast safely:
 
 More importantly — look at what you wrote down on Day 3. Those goals. That plan. That's your compass for the next 90 days. Don't let it collect dust.
 
-The next Alpha Reset is in June. Between now and then, execute.
+The next Alpha Reset is in July. Between now and then, execute.
 
 Stay connected on Bestday. The accountability doesn't stop when the fast ends.
 
