@@ -41,7 +41,7 @@ const faqs = [
   },
   {
     q: "When is the next one?",
-    a: "7–9 April 2026. Starts midnight on Tuesday, ends 6pm Thursday. Sign up below and join us on Bestday.",
+    a: "8–10 April 2026. Starts midnight on Wednesday, ends 6pm Friday. Sign up below and join us on Bestday.",
   },
 ];
 
