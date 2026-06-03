@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
 Welcome to Alpha Reset. You're in.
 
-The next session starts 23 March 2026 and runs for 72 hours. Here's what to expect:
+The next session starts 24 June 2026 and runs for 72 hours. Here's what to expect:
 
 - 72-hour water fast (water & coffee only)
 - Daily walks or runs
@@ -67,7 +67,7 @@ The next session starts 23 March 2026 and runs for 72 hours. Here's what to expe
 
 Join the group on Bestday to connect with other Alphas: https://getbestdayapp.app.link/5SerCVKw60b
 
-See you on the 23rd.
+See you on the 24th.
 
 Kay`,
       });

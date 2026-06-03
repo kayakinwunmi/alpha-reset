@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-const TARGET_DATE = new Date("2026-03-23T00:00:00").getTime();
+const TARGET_DATE = new Date("2026-06-24T00:00:00").getTime();
 
 function getSecondsLeft(): number {
   return Math.max(0, Math.floor((TARGET_DATE - Date.now()) / 1000));

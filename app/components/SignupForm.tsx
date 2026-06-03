@@ -33,7 +33,7 @@ export function SignupForm() {
       <div className="py-8 text-center">
         <p className="text-2xl font-light text-[var(--ink)] mb-4">You&apos;re in.</p>
         <p className="text-[var(--ink-light)] mb-8">
-          Check your email. See you on the 23rd.
+          Check your email. See you on the 24th.
         </p>
         <a
           href="https://getbestdayapp.app.link/5SerCVKw60b"

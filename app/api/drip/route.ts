@@ -55,8 +55,8 @@ export async function GET(req: NextRequest) {
       shouldSend = daysUntilEvent <= trigger.days;
     } else if (trigger.type === "after_event") {
       const daysSinceEvent = (now.getTime() - EVENT_DATE.getTime()) / (1000 * 60 * 60 * 24);
-      // Event is 3 days, so "after event" means after day 3 (25 March 18:00)
-      const eventEnd = new Date("2026-03-25T18:00:00Z");
+      // Event is 3 days, so "after event" means after day 3 (26 June 18:00)
+      const eventEnd = new Date("2026-06-26T18:00:00Z");
       const daysSinceEnd = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60 * 24);
       shouldSend = daysSinceEnd >= trigger.days;
     } else if (trigger.type === "event_day") {
