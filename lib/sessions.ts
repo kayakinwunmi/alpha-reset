@@ -3,6 +3,7 @@
 // migration hasn't been run — the public site must never blank out.
 
 import { getSupabase } from "./supabase";
+import { T } from "./tables";
 import { FALLBACK_SESSION } from "./event";
 import { SessionRow } from "./session-types";
 
@@ -14,7 +15,7 @@ export function fallbackSessionRow(): SessionRow {
 export async function getOpenSessions(limit = 6): Promise<SessionRow[]> {
   try {
     const { data, error } = await getSupabase()
-      .from("sessions")
+      .from(T.sessions)
       .select("*")
       .eq("status", "open")
       .gt("ends_at", new Date().toISOString())
@@ -36,7 +37,7 @@ export async function getSessionById(id: string): Promise<SessionRow | null> {
   if (id === FALLBACK_SESSION.id) return fallbackSessionRow();
   try {
     const { data, error } = await getSupabase()
-      .from("sessions")
+      .from(T.sessions)
       .select("*")
       .eq("id", id)
       .single();
@@ -54,7 +55,7 @@ export async function getSessionById(id: string): Promise<SessionRow | null> {
 export async function getSessionAfter(session: SessionRow): Promise<SessionRow | null> {
   try {
     const { data } = await getSupabase()
-      .from("sessions")
+      .from(T.sessions)
       .select("*")
       .eq("status", "open")
       .gt("starts_at", session.starts_at)

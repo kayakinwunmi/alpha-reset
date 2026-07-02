@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import { T } from "@/lib/tables";
 import { ADMIN_COOKIE, isValidAdminToken } from "@/lib/admin-auth";
 import type { SessionRow, RegistrationRow } from "@/lib/session-types";
 import { AdminDashboard, type Signup, type Broadcast } from "./AdminDashboard";
@@ -19,10 +20,10 @@ export default async function AdminPage() {
   // migrations run — a null result just renders an empty state.
   const [{ data: signups }, { data: sessions }, { data: registrations }, { data: broadcasts }] =
     await Promise.all([
-      supabase.from("signups").select("*").order("created_at", { ascending: false }),
-      supabase.from("sessions").select("*").order("starts_at", { ascending: true }),
-      supabase.from("registrations").select("*").order("created_at", { ascending: false }),
-      supabase.from("messages").select("*").order("created_at", { ascending: false }).limit(20),
+      supabase.from(T.signups).select("*").order("created_at", { ascending: false }),
+      supabase.from(T.sessions).select("*").order("starts_at", { ascending: true }),
+      supabase.from(T.registrations).select("*").order("created_at", { ascending: false }),
+      supabase.from(T.messages).select("*").order("created_at", { ascending: false }).limit(20),
     ]);
 
   return (

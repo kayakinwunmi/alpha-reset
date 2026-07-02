@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { T } from "@/lib/tables";
 import { ADMIN_COOKIE, isValidAdminToken } from "@/lib/admin-auth";
 
 function unauthorized() {
@@ -14,7 +15,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
   }
 
-  const { error } = await getSupabase().from("signups").delete().eq("id", id);
+  const { error } = await getSupabase().from(T.signups).delete().eq("id", id);
   if (error) {
     console.error("Delete signup error:", error);
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });

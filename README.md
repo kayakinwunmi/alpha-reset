@@ -59,15 +59,22 @@ Sessions are an httpOnly HMAC cookie derived from the password — changing `ADM
 
 ## Database
 
-Run in the Supabase SQL Editor, in order (all idempotent):
+All tables are prefixed **`ar_`** (`ar_signups`, `ar_sessions`, `ar_registrations`, `ar_messages`) so the Supabase project can be shared with other apps. Table names are centralised in `lib/tables.ts` — if they ever change again, that's the only code file to touch.
 
-1. `supabase-schema.sql` — base `signups` table (fresh setup only)
-2. `supabase-migration.sql` — intention, drip columns, optional phone, `messages` log
-3. `supabase-migration-2.sql` — `sessions` + `registrations` tables, `story_stage`, and a backfill that creates the June 2026 session and registers every existing signup for it (preserving their drip progress)
+Run in the Supabase SQL Editor (all idempotent):
+
+**Existing database (was set up before the `ar_` prefix):**
+1. `supabase-migration-3.sql` — renames your existing tables to the `ar_` names, preserving all data, constraints, and policies. Run this *before* deploying the prefixed code.
+2. `supabase-migration-2.sql` — if you haven't run it yet (sessions + registrations + backfill).
+
+**Fresh database:**
+1. `supabase-schema.sql` — base `ar_signups` table
+2. `supabase-migration.sql` — intention, drip columns, optional phone, `ar_messages` log
+3. `supabase-migration-2.sql` — `ar_sessions` + `ar_registrations`, `story_stage`, and a backfill that creates the June 2026 session and registers every existing signup for it (preserving their drip progress)
 
 ## Post-deploy checklist
 
-1. Run `supabase-migration-2.sql`; open The Ledger and confirm the June session appears with your existing people registered.
+1. Run `supabase-migration-3.sql` (then `supabase-migration-2.sql` if not yet run); open The Ledger and confirm the June session appears with your existing people registered.
 2. Create the next few sessions (+ the in-person retreat with location/places/note).
 3. Sign up a test email for two sessions; check the welcome email lists both and the in-person one shows as "requested".
 4. Approve the test request from the dashboard; check the confirmation email.

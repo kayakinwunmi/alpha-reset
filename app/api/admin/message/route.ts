@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { T } from "@/lib/tables";
 import { ADMIN_COOKIE, isValidAdminToken } from "@/lib/admin-auth";
 import { sendBrandedEmail } from "@/lib/email";
 
@@ -31,10 +32,10 @@ export async function POST(req: NextRequest) {
   if (sessionId && typeof sessionId === "string") {
     // Everyone confirmed for one session.
     const [{ data: session }, { data: regs, error: regErr }] = await Promise.all([
-      supabase.from("sessions").select("title").eq("id", sessionId).single(),
+      supabase.from(T.sessions).select("title").eq("id", sessionId).single(),
       supabase
-        .from("registrations")
-        .select("person:signups(id, first_name, email)")
+        .from(T.registrations)
+        .select(`person:${T.signups}(id, first_name, email)`)
         .eq("session_id", sessionId)
         .eq("status", "confirmed"),
     ]);
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(recipientIds) && recipientIds.length === 0) {
       return NextResponse.json({ error: "No recipients selected" }, { status: 400 });
     }
-    let query = supabase.from("signups").select("id, first_name, email");
+    let query = supabase.from(T.signups).select("id, first_name, email");
     if (recipientIds !== "all") {
       query = query.in("id", recipientIds);
       audience = "selected";
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
 
   // Log the broadcast — best-effort, the messages table may not be migrated yet.
   try {
-    await supabase.from("messages").insert({
+    await supabase.from(T.messages).insert({
       subject,
       body,
       recipient_count: sent.length,

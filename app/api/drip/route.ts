@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { T } from "@/lib/tables";
 import { sendBrandedEmail } from "@/lib/email";
 import { STORY_DRIPS, SESSION_DRIPS, SessionEmailCtx } from "@/lib/drip-emails";
 import { getSessionAfter } from "@/lib/sessions";
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
   // ---- Pass 1: story emails (person-level) ----------------------------------
   const story = STORY_DRIPS[0];
   const { data: pendingStory, error: storyErr } = await supabase
-    .from("signups")
+    .from(T.signups)
     .select("id, first_name, email, created_at, story_stage")
     .or("story_stage.is.null,story_stage.eq.0");
 
@@ -58,7 +59,7 @@ export async function GET(req: NextRequest) {
           subject: story.subject,
           text: story.body(firstName),
         });
-        await supabase.from("signups").update({ story_stage: story.stage }).eq("id", person.id);
+        await supabase.from(T.signups).update({ story_stage: story.stage }).eq("id", person.id);
         results.push(`${person.first_name}: ✅ story — "${story.subject}"`);
       } catch (err) {
         results.push(`${person.first_name}: ❌ story failed — ${errMessage(err)}`);
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
   // ---- Pass 2: session countdown emails (per registration) ------------------
   // Include sessions that ended in the last week so the day-after email sends.
   const { data: sessions, error: sessionsErr } = await supabase
-    .from("sessions")
+    .from(T.sessions)
     .select("*")
     .eq("status", "open")
     .gt("ends_at", new Date(now.getTime() - 7 * DAY_MS).toISOString())
@@ -92,8 +93,8 @@ export async function GET(req: NextRequest) {
     const endsAt = new Date(session.ends_at);
 
     const { data: regs, error: regsErr } = await supabase
-      .from("registrations")
-      .select("id, drip_stage, last_drip_at, person:signups(id, first_name, email)")
+      .from(T.registrations)
+      .select(`id, drip_stage, last_drip_at, person:${T.signups}(id, first_name, email)`)
       .eq("session_id", session.id)
       .eq("status", "confirmed");
 
@@ -144,7 +145,7 @@ export async function GET(req: NextRequest) {
           text: nextDrip.body(firstName, ctx),
         });
         await supabase
-          .from("registrations")
+          .from(T.registrations)
           .update({ drip_stage: nextDrip.stage, last_drip_at: now.toISOString() })
           .eq("id", reg.id);
         results.push(`${person.first_name} @ ${session.title}: ✅ stage ${nextDrip.stage} — "${nextDrip.subject}"`);

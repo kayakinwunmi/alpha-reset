@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { T } from "@/lib/tables";
 import { ADMIN_COOKIE, isValidAdminToken } from "@/lib/admin-auth";
 
 const EDITABLE_FIELDS = [
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
   const invalid = validate(fields, true);
   if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
 
-  const { data, error } = await getSupabase().from("sessions").insert(fields).select().single();
+  const { data, error } = await getSupabase().from(T.sessions).insert(fields).select().single();
   if (error) {
     console.error("Create session error:", error);
     return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
@@ -76,7 +77,7 @@ export async function PATCH(req: NextRequest) {
   const invalid = validate(fields, false);
   if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
 
-  const { error } = await getSupabase().from("sessions").update(fields).eq("id", id);
+  const { error } = await getSupabase().from(T.sessions).update(fields).eq("id", id);
   if (error) {
     console.error("Update session error:", error);
     return NextResponse.json({ error: "Failed to update session" }, { status: 500 });
@@ -94,7 +95,7 @@ export async function DELETE(req: NextRequest) {
 
   const supabase = getSupabase();
   const { count } = await supabase
-    .from("registrations")
+    .from(T.registrations)
     .select("id", { count: "exact", head: true })
     .eq("session_id", id);
 
@@ -105,7 +106,7 @@ export async function DELETE(req: NextRequest) {
     );
   }
 
-  const { error } = await supabase.from("sessions").delete().eq("id", id);
+  const { error } = await supabase.from(T.sessions).delete().eq("id", id);
   if (error) {
     console.error("Delete session error:", error);
     return NextResponse.json({ error: "Failed to delete session" }, { status: 500 });

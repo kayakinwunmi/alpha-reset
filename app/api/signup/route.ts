@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { T } from "@/lib/tables";
 import { sendWelcomeEmail, sendReturningEmail, SessionLine } from "@/lib/email";
 import { FALLBACK_SESSION } from "@/lib/event";
 import { SessionRow, sessionRangeLabel } from "@/lib/session-types";
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
     let sessionsTableMissing = false;
     if (!wantsFallback) {
       const { data, error } = await supabase
-        .from("sessions")
+        .from(T.sessions)
         .select("*")
         .in("id", ids)
         .eq("status", "open");
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     let personId: string;
     let returning = false;
     const { data: existing } = await supabase
-      .from("signups")
+      .from(T.signups)
       .select("id")
       .eq("email", person.email)
       .maybeSingle();
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
       returning = true;
     } else {
       const { data: inserted, error: insertErr } = await supabase
-        .from("signups")
+        .from(T.signups)
         .insert(person)
         .select("id")
         .single();
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
         if (insertErr.code === "23505") {
           // Raced with another submit — fetch the row that won.
           const { data: raced } = await supabase
-            .from("signups")
+            .from(T.signups)
             .select("id")
             .eq("email", person.email)
             .single();
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
       intention: cleanIntention,
     }));
     const { data: createdRows, error: regErr } = await supabase
-      .from("registrations")
+      .from(T.registrations)
       .upsert(rows, { onConflict: "person_id,session_id", ignoreDuplicates: true })
       .select("session_id, status");
 
@@ -181,9 +182,9 @@ async function legacySignup(
   const supabase = getSupabase();
   const row = { ...person, intention };
 
-  let { error: dbError } = await supabase.from("signups").insert(row);
+  let { error: dbError } = await supabase.from(T.signups).insert(row);
   if (dbError && (dbError.code === "42703" || dbError.code === "PGRST204")) {
-    ({ error: dbError } = await supabase.from("signups").insert(person));
+    ({ error: dbError } = await supabase.from(T.signups).insert(person));
   }
 
   const fallbackLine: SessionLine = {

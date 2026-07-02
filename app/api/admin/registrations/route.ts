@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { T } from "@/lib/tables";
 import { ADMIN_COOKIE, isValidAdminToken } from "@/lib/admin-auth";
 import { sendApprovalEmail, sendDeclineEmail } from "@/lib/email";
 import { sessionRangeLabel } from "@/lib/session-types";
@@ -20,8 +21,8 @@ export async function PATCH(req: NextRequest) {
 
   const supabase = getSupabase();
   const { data: reg, error: fetchErr } = await supabase
-    .from("registrations")
-    .select("id, status, person:signups(first_name, email), session:sessions(title, starts_at, ends_at, location)")
+    .from(T.registrations)
+    .select(`id, status, person:${T.signups}(first_name, email), session:${T.sessions}(title, starts_at, ends_at, location)`)
     .eq("id", id)
     .single();
 
@@ -31,7 +32,7 @@ export async function PATCH(req: NextRequest) {
 
   const newStatus = action === "approve" ? "confirmed" : "declined";
   const { error: updateErr } = await supabase
-    .from("registrations")
+    .from(T.registrations)
     .update({ status: newStatus })
     .eq("id", id);
 
@@ -81,7 +82,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
   }
 
-  const { error } = await getSupabase().from("registrations").delete().eq("id", id);
+  const { error } = await getSupabase().from(T.registrations).delete().eq("id", id);
   if (error) {
     console.error("Delete registration error:", error);
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
