@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EVENT_RANGE_LABEL, EVENT_START_WEEKDAY } from "@/lib/event";
 
 const faqs = [
   {
@@ -25,7 +26,12 @@ const faqs = [
   },
   {
     q: "What do I need to prepare?",
-    a: "Clear your calendar for 3 days. Stock up on water and coffee. Get a journal. Download Bestday and join the group. Most importantly — set an intention. Know why you're doing this before you start.",
+    a: "Clear your calendar for 3 days. Stock up on water and coffee. Get a journal. Download Bestday and join the group. Most importantly — set an intention. Know why you're doing this before you start. The Field Guide covers all of it, step by step.",
+    link: { label: "Read the Field Guide →", href: "/guide" },
+  },
+  {
+    q: "Is a 72-hour fast safe for me?",
+    a: "For most healthy adults, a supervised short fast is manageable — but it isn't for everyone. If you're pregnant or breastfeeding, under 18, have diabetes, a heart condition, a history of eating disorders, or take regular medication, talk to your doctor before joining. And during the fast: if you feel genuinely unwell — not just hungry — stop and eat. Discipline is the goal, not harm.",
   },
   {
     q: "Can I exercise during the fast?",
@@ -41,7 +47,7 @@ const faqs = [
   },
   {
     q: "When is the next one?",
-    a: "24–26 June 2026. Starts midnight on Wednesday, ends 6pm Friday. Sign up below and join us on Bestday.",
+    a: `${EVENT_RANGE_LABEL}. Starts midnight on ${EVENT_START_WEEKDAY}, ends 6pm Friday. Sign up below and join us on Bestday.`,
   },
 ];
 
@@ -70,9 +76,14 @@ export function FAQ() {
                 </span>
               </button>
               {open === i && (
-                <p className="pb-5 text-[var(--ink-light)] leading-relaxed pl-0">
-                  {faq.a}
-                </p>
+                <div className="pb-5">
+                  <p className="text-[var(--ink-light)] leading-relaxed">{faq.a}</p>
+                  {"link" in faq && faq.link && (
+                    <a href={faq.link.href} className="inline-block mt-3 font-sans text-sm text-[var(--accent)] underline">
+                      {faq.link.label}
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           ))}

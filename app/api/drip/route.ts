@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
-import { Resend } from "resend";
-import { drips, EVENT_DATE } from "@/lib/drip-emails";
-
-function getResend() {
-  return new Resend(process.env.RESEND_API_KEY);
-}
+import { sendBrandedEmail } from "@/lib/email";
+import { drips } from "@/lib/drip-emails";
+import { EVENT_START, EVENT_END } from "@/lib/event";
 
 // Vercel cron calls this daily
 // Also protected by a secret so it can't be triggered externally
@@ -18,7 +15,6 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = getSupabase();
-  const resend = getResend();
   const now = new Date();
   const results: string[] = [];
 
@@ -51,16 +47,13 @@ export async function GET(req: NextRequest) {
       const daysSinceSignup = (now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24);
       shouldSend = daysSinceSignup >= trigger.days;
     } else if (trigger.type === "before_event") {
-      const daysUntilEvent = (EVENT_DATE.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      const daysUntilEvent = (EVENT_START.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
       shouldSend = daysUntilEvent <= trigger.days;
     } else if (trigger.type === "after_event") {
-      const daysSinceEvent = (now.getTime() - EVENT_DATE.getTime()) / (1000 * 60 * 60 * 24);
-      // Event is 3 days, so "after event" means after day 3 (26 June 18:00)
-      const eventEnd = new Date("2026-06-26T18:00:00Z");
-      const daysSinceEnd = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceEnd = (now.getTime() - EVENT_END.getTime()) / (1000 * 60 * 60 * 24);
       shouldSend = daysSinceEnd >= trigger.days;
     } else if (trigger.type === "event_day") {
-      const eventDay = new Date(EVENT_DATE);
+      const eventDay = new Date(EVENT_START);
       eventDay.setDate(eventDay.getDate() + trigger.day - 1);
       // Send if we're on or past this event day
       const isTodayOrPast =
@@ -90,8 +83,7 @@ export async function GET(req: NextRequest) {
     // Send the email
     const firstName = signup.first_name.split(" ")[0]; // Use first name only
     try {
-      await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || "Kay <kay@alphareset.co>",
+      await sendBrandedEmail({
         to: signup.email,
         subject: nextDrip.subject,
         text: nextDrip.body(firstName),
@@ -104,8 +96,9 @@ export async function GET(req: NextRequest) {
         .eq("id", signup.id);
 
       results.push(`${signup.first_name}: ✅ sent stage ${nextDrip.stage} — "${nextDrip.subject}"`);
-    } catch (emailErr: any) {
-      results.push(`${signup.first_name}: ❌ failed stage ${nextDrip.stage} — ${emailErr.message}`);
+    } catch (emailErr: unknown) {
+      const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
+      results.push(`${signup.first_name}: ❌ failed stage ${nextDrip.stage} — ${message}`);
     }
   }
 
