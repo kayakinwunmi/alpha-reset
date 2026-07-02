@@ -1,7 +1,18 @@
-// Alpha Reset email drip sequence
-// Event date: 24 June 2026 00:00 UTC
+// Alpha Reset email drip sequence.
+// All dates derive from lib/event.ts — update that file when the next reset is announced.
 
-export const EVENT_DATE = new Date("2026-06-24T00:00:00Z");
+import {
+  EVENT_START,
+  EVENT_RANGE_LABEL,
+  EVENT_START_ORDINAL,
+  EVENT_START_WEEKDAY,
+  NEXT_RESET_HINT,
+  GROUP_CALL_TIME,
+  BESTDAY_URL,
+  SITE_URL,
+} from "./event";
+
+export const EVENT_DATE = EVENT_START;
 
 export interface DripEmail {
   stage: number;
@@ -37,12 +48,12 @@ That's what Alpha Reset is. It's not comfortable. It's not supposed to be.
 
 But it works.
 
-See you on the 24th.
+See you on ${EVENT_START_ORDINAL}.
 
 Kay`,
   },
 
-  // Stage 2: "Prep Guide" — 7 days before event (17 June)
+  // Stage 2: "Prep Guide" — 7 days before event
   {
     stage: 2,
     subject: "How to prepare for Alpha Reset",
@@ -51,7 +62,7 @@ Kay`,
 
 One week to go. Here's how to set yourself up:
 
-1. Clear your calendar for 24-26 June. Tell people you're offline. No exceptions.
+1. Clear your calendar for ${EVENT_RANGE_LABEL}. Tell people you're offline. No exceptions.
 
 2. Stock up:
    - Water (lots of it)
@@ -61,40 +72,42 @@ One week to go. Here's how to set yourself up:
 
 3. Set your intention. Why are you doing this? Write it down. Be specific. "I want clarity on my next career move" is better than "I want to grow."
 
-4. Download Bestday and join the group: https://getbestdayapp.app.link/5SerCVKw60b — this is where we'll share updates, evening call links, and hold each other accountable.
+4. Download Bestday and join the group: ${BESTDAY_URL} — this is where we'll share updates, evening call links, and hold each other accountable.
 
 5. Tell someone. Accountability changes everything. Tell a friend, a partner, someone who'll check on you.
 
 6. Clean your space. Messy environment = messy mind. Start fresh.
+
+The full Field Guide — prep, the day-by-day protocol, and how to break the fast — is here: ${SITE_URL}/guide
 
 One more thing — don't overthink it. You signed up for a reason. Trust that.
 
 Kay`,
   },
 
-  // Stage 3: "Final Reminder" — 2 days before event (22 June)
+  // Stage 3: "Final Reminder" — 2 days before event
   {
     stage: 3,
     subject: "48 hours to go",
     trigger: { type: "before_event", days: 2 },
     body: (name) => `Hey ${name},
 
-Alpha Reset starts in 48 hours. Midnight on Wednesday the 24th.
+Alpha Reset starts in 48 hours. Midnight on ${EVENT_START_WEEKDAY} ${EVENT_START_ORDINAL}.
 
 Eat well today and tomorrow. Hydrate. Get your affairs in order.
 
-Wednesday night we have a kick-off call at 8pm BST on the Bestday group. Be there.
+${EVENT_START_WEEKDAY} night we have a kick-off call at ${GROUP_CALL_TIME} on the Bestday group. Be there.
 
-If you haven't joined the group yet: https://getbestdayapp.app.link/5SerCVKw60b
+If you haven't joined the group yet: ${BESTDAY_URL}
 
 Remember why you signed up. Hold onto that.
 
-See you Wednesday night.
+See you ${EVENT_START_WEEKDAY} night.
 
 Kay`,
   },
 
-  // Stage 4: Day 1 — "Reset" (24 June)
+  // Stage 4: Day 1 — "Reset"
   {
     stage: 4,
     subject: "Day 1: Reset",
@@ -114,14 +127,14 @@ Here's your focus:
 
 Drink water. Go for a walk. Journal. Pray.
 
-Group call tonight at 8pm BST on Bestday.
+Group call tonight at ${GROUP_CALL_TIME} on Bestday.
 
 You've got this.
 
 Kay`,
   },
 
-  // Stage 5: Day 2 — "Reflect" (25 June)
+  // Stage 5: Day 2 — "Reflect"
   {
     stage: 5,
     subject: "Day 2: Reflect",
@@ -142,14 +155,14 @@ Write it all down. Every bit of it. Be brutally honest.
 
 This isn't about beating yourself up. It's about seeing clearly so you can move forward.
 
-Group call tonight at 8pm BST.
+Group call tonight at ${GROUP_CALL_TIME}.
 
 Keep going.
 
 Kay`,
   },
 
-  // Stage 6: Day 3 — "Focus" (26 June)
+  // Stage 6: Day 3 — "Focus"
   {
     stage: 6,
     subject: "Day 3: Focus",
@@ -168,14 +181,14 @@ Answer these honestly:
 
 Don't write a wish list. Write a battle plan. Imagine you're going to war. Will you lead yourself to victory?
 
-Final group call tonight at 8pm BST.
+Final group call tonight at ${GROUP_CALL_TIME}.
 
 Almost there.
 
 Kay`,
   },
 
-  // Stage 7: Day after — "You Did It" (27 June)
+  // Stage 7: Day after — "You Did It"
   {
     stage: 7,
     subject: "You did it 🦾",
@@ -192,7 +205,7 @@ How to break your fast safely:
 
 More importantly — look at what you wrote down on Day 3. Those goals. That plan. That's your compass for the next 90 days. Don't let it collect dust.
 
-The next Alpha Reset is in September. Between now and then, execute.
+The next Alpha Reset is in ${NEXT_RESET_HINT.split(" ")[0]}. Between now and then, execute.
 
 Stay connected on Bestday. The accountability doesn't stop when the fast ends.
 

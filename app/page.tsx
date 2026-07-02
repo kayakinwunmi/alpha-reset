@@ -4,6 +4,7 @@ import { SignupForm } from "./components/SignupForm";
 import { Countdown } from "./components/Countdown";
 import { FAQ } from "./components/FAQ";
 import { AudioPlayer } from "./components/AudioPlayer";
+import { EVENT_START_ISO, EVENT_START_LABEL, EVENT_RANGE_LABEL } from "@/lib/event";
 
 import Image from "next/image";
 
@@ -28,9 +29,26 @@ export default function Home() {
           <h1 className="text-6xl md:text-8xl font-light text-white mb-6 tracking-tight">
             Alpha Reset
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 font-light italic">
+          <p className="text-xl md:text-2xl text-white/90 font-light italic mb-3">
             Live like the 1%.
           </p>
+          <p className="text-white/70 font-sans text-sm tracking-[0.2em] uppercase mb-10">
+            72 hours · No food · No distractions · {EVENT_RANGE_LABEL}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a
+              href="#signup"
+              className="px-8 py-3.5 bg-[var(--accent)] text-white font-sans text-sm tracking-[0.2em] uppercase hover:bg-[var(--accent-light)] transition-colors"
+            >
+              Save my place
+            </a>
+            <a
+              href="/guide"
+              className="px-8 py-3.5 border border-white/50 text-white font-sans text-sm tracking-[0.2em] uppercase hover:border-white hover:bg-white/10 transition-colors"
+            >
+              Read the Field Guide
+            </a>
+          </div>
         </div>
       </section>
 
@@ -56,11 +74,11 @@ export default function Home() {
 
           <p className="text-lg md:text-xl leading-relaxed text-[var(--ink)] mb-2">
             The next one starts{" "}
-            <span className="font-semibold text-[var(--accent)]">24 June 2026</span>.
+            <span className="font-semibold text-[var(--accent)]">{EVENT_START_LABEL}</span>.
           </p>
 
           <div className="my-12">
-            <Countdown targetDate="2026-06-24T00:00:00Z" />
+            <Countdown targetDate={EVENT_START_ISO} />
           </div>
 
           <div className="border-t border-[var(--rule)] my-16" />
@@ -212,33 +230,51 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Tips */}
-          <div className="border-t border-[var(--rule)] mt-16 pt-12">
-            <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-6">
-              Tips for making the most of it
-            </h3>
-            <ul className="space-y-2 text-[var(--ink-light)] text-lg">
-              <li>Schedule time for meditation, prayer, worship, and silence</li>
-              <li>Read books or watch films that inspire you</li>
-              <li>Review your life vision, mission, and core values</li>
-              <li>Go for a walk in nature</li>
-              <li>Drink plenty of water (or black coffee)</li>
-              <li>Journal</li>
-              <li>Remember — these 3 days are for <em>you</em></li>
-            </ul>
+          {/* Field Guide pointer */}
+          <div className="border-t border-[var(--rule)] mt-16 pt-12 text-center">
+            <p className="text-lg text-[var(--ink-light)] mb-6">
+              How to prepare, what to stock, the day-by-day prompts, and how to break the fast
+              safely — it&apos;s all written down.
+            </p>
+            <a
+              href="/guide"
+              className="inline-block px-8 py-3 border border-[var(--accent)] text-[var(--accent)] font-sans text-sm tracking-[0.2em] uppercase hover:bg-[var(--accent)] hover:text-white transition-colors"
+            >
+              The Field Guide →
+            </a>
           </div>
+        </div>
+      </section>
 
-          {/* Breaking the fast */}
-          <div className="border-t border-[var(--rule)] mt-12 pt-12">
-            <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-6">
-              Breaking the fast safely
-            </h3>
-            <ul className="space-y-2 text-[var(--ink-light)] text-lg">
-              <li>Start with easily digestible foods — clear broths, diluted fruit juices, or yogurt</li>
-              <li>Avoid overeating immediately after your fast</li>
-              <li>Continue drinking plenty of water and herbal teas</li>
-              <li>Choose whole foods: fruits, vegetables, lean proteins, complex carbs</li>
-            </ul>
+      {/* Is this for you */}
+      <section className="py-16 px-6">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-light text-[var(--ink)] mb-12 text-center">
+            Is This For You?
+          </h2>
+          <div className="grid md:grid-cols-2 gap-12">
+            <div>
+              <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--accent)] mb-6">
+                This is for you if
+              </h3>
+              <ul className="space-y-3 text-lg text-[var(--ink-light)]">
+                <li>You&apos;re busy but can&apos;t say what the last 90 days added up to</li>
+                <li>You want clarity more than comfort</li>
+                <li>You keep promises to everyone except yourself</li>
+                <li>You&apos;d rather do something hard once a quarter than drift for a year</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-sans font-medium tracking-[0.2em] uppercase text-[var(--ink-light)] mb-6">
+                It&apos;s not for you if
+              </h3>
+              <ul className="space-y-3 text-lg text-[var(--ink-faint)]">
+                <li>You want a challenge to watch, not one to do</li>
+                <li>You&apos;re looking for a weight-loss hack</li>
+                <li>You expect it to be easy — it isn&apos;t, by design</li>
+                <li>A fast isn&apos;t medically safe for you right now</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -287,7 +323,7 @@ export default function Home() {
             Join Us
           </h2>
           <p className="text-lg text-[var(--ink-light)] mb-3">
-            Next session: <span className="font-semibold text-[var(--accent)]">24–26 June 2026</span>
+            Next session: <span className="font-semibold text-[var(--accent)]">{EVENT_RANGE_LABEL}</span>
           </p>
           <p className="text-[var(--ink-faint)] mb-10 font-sans text-sm">
             Alpha Reset is free. You&apos;ll need a{" "}
@@ -307,9 +343,15 @@ export default function Home() {
           Every quarter, become a completely different human being. By choice.
         </p>
         <p className="text-[var(--ink)]">— Kay</p>
-        <div className="border-t border-[var(--rule)] mt-12 pt-6">
+        <div className="border-t border-[var(--rule)] mt-12 pt-6 max-w-2xl mx-auto">
+          <p className="text-xs text-[var(--ink-faint)] font-sans leading-relaxed mb-4">
+            Alpha Reset is a personal challenge, not medical advice. Extended fasting isn&apos;t
+            suitable for everyone — if you&apos;re pregnant, under 18, diabetic, or have any medical
+            condition, consult your doctor first.
+          </p>
           <p className="text-sm text-[var(--ink-faint)] font-sans">
-            Alpha Reset © {new Date().getFullYear()}
+            <a href="/guide" className="underline hover:text-[var(--accent)] transition-colors">Field Guide</a>
+            {" · "}Alpha Reset © {new Date().getFullYear()}
           </p>
         </div>
       </footer>

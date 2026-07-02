@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { EVENT_RANGE_LABEL, SITE_URL } from "@/lib/event";
 
-const siteUrl = "https://www.alphareset.co";
+const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
   title: "Alpha Reset — Live Like The 1%",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Kay Akinwunmi" }],
   openGraph: {
     title: "Alpha Reset — Live Like The 1%",
-    description: "72 hours. No food. No distractions. A quarterly water-fasting + life review challenge. Join us 24–26 June 2026.",
+    description: `72 hours. No food. No distractions. A quarterly water-fasting + life review challenge. Join us ${EVENT_RANGE_LABEL}.`,
     url: siteUrl,
     siteName: "Alpha Reset",
     images: [
