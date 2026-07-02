@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { EVENT_RANGE_LABEL, EVENT_START_WEEKDAY } from "@/lib/event";
 
 const faqs = [
   {
@@ -46,13 +45,27 @@ const faqs = [
     a: "That's fine. Most people haven't done a 72-hour fast. The group is there to support you. You'll be surprised what you're capable of when you commit.",
   },
   {
-    q: "When is the next one?",
-    a: `${EVENT_RANGE_LABEL}. Starts midnight on ${EVENT_START_WEEKDAY}, ends 6pm Friday. Sign up below and join us on Bestday.`,
+    q: "What's the in-person reset?",
+    a: "Once a year we do the reset together, in person — a house somewhere remote, three days over a weekend, everyone contributes to the costs. Places are limited, so you request one when you sign up and Kay confirms each place personally. People say it's the best thing they do all year.",
   },
 ];
 
-export function FAQ() {
+export function FAQ({
+  nextRangeLabel,
+  nextWeekday,
+}: {
+  nextRangeLabel: string;
+  nextWeekday: string;
+}) {
   const [open, setOpen] = useState<number | null>(null);
+
+  const allFaqs = [
+    ...faqs,
+    {
+      q: "When is the next one?",
+      a: `${nextRangeLabel}. Starts midnight on ${nextWeekday}. The full schedule is in The Calendar above — sign up below and join us on Bestday.`,
+    },
+  ];
 
   return (
     <section className="py-16 px-6">
@@ -62,7 +75,7 @@ export function FAQ() {
         </h2>
 
         <div className="divide-y divide-[var(--rule)]">
-          {faqs.map((faq, i) => (
+          {allFaqs.map((faq, i) => (
             <div key={i}>
               <button
                 onClick={() => setOpen(open === i ? null : i)}

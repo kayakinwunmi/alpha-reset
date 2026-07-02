@@ -1,37 +1,42 @@
-// Alpha Reset email drip sequence.
-// All dates derive from lib/event.ts — update that file when the next reset is announced.
+// Alpha Reset email sequences.
+//
+// STORY_DRIPS   — sent once per person, ever (tracked by signups.story_stage).
+// SESSION_DRIPS — the countdown around each session a person is registered
+//                 for (tracked by registrations.drip_stage), timed against
+//                 that session's dates.
 
-import {
-  EVENT_START,
-  EVENT_RANGE_LABEL,
-  EVENT_START_ORDINAL,
-  EVENT_START_WEEKDAY,
-  NEXT_RESET_HINT,
-  GROUP_CALL_TIME,
-  BESTDAY_URL,
-  SITE_URL,
-} from "./event";
+import { GROUP_CALL_TIME, BESTDAY_URL, SITE_URL } from "./event";
 
-export const EVENT_DATE = EVENT_START;
-
-export interface DripEmail {
-  stage: number;
-  subject: string;
-  body: (name: string) => string;
-  // When to send: either days after signup, or days before/after event
-  trigger:
-    | { type: "after_signup"; days: number }
-    | { type: "before_event"; days: number }
-    | { type: "after_event"; days: number }
-    | { type: "event_day"; day: number }; // day 1, 2, or 3
+/** Labels for the session an email is being sent about. */
+export interface SessionEmailCtx {
+  rangeLabel: string;    // "24–26 June 2026"
+  startOrdinal: string;  // "the 24th"
+  startWeekday: string;  // "Wednesday"
+  nextResetHint: string; // "September" or "next quarter"
 }
 
-export const drips: DripEmail[] = [
-  // Stage 1: "The Why" — 2 days after signup
+export interface StoryDrip {
+  stage: number;
+  subject: string;
+  afterSignupDays: number;
+  body: (name: string) => string;
+}
+
+export interface SessionDrip {
+  stage: number;
+  subject: string;
+  trigger:
+    | { type: "before_event"; days: number }
+    | { type: "event_day"; day: number } // day 1, 2, or 3
+    | { type: "after_event"; days: number };
+  body: (name: string, ctx: SessionEmailCtx) => string;
+}
+
+export const STORY_DRIPS: StoryDrip[] = [
   {
     stage: 1,
     subject: "Why I started Alpha Reset",
-    trigger: { type: "after_signup", days: 2 },
+    afterSignupDays: 2,
     body: (name) => `Hey ${name},
 
 I wanted to share why I do this.
@@ -48,21 +53,23 @@ That's what Alpha Reset is. It's not comfortable. It's not supposed to be.
 
 But it works.
 
-See you on ${EVENT_START_ORDINAL}.
+See you at the next reset.
 
 Kay`,
   },
+];
 
-  // Stage 2: "Prep Guide" — 7 days before event
+export const SESSION_DRIPS: SessionDrip[] = [
+  // Stage 1: "Prep Guide" — 7 days before the session
   {
-    stage: 2,
+    stage: 1,
     subject: "How to prepare for Alpha Reset",
     trigger: { type: "before_event", days: 7 },
-    body: (name) => `Hey ${name},
+    body: (name, ctx) => `Hey ${name},
 
 One week to go. Here's how to set yourself up:
 
-1. Clear your calendar for ${EVENT_RANGE_LABEL}. Tell people you're offline. No exceptions.
+1. Clear your calendar for ${ctx.rangeLabel}. Tell people you're offline. No exceptions.
 
 2. Stock up:
    - Water (lots of it)
@@ -85,31 +92,31 @@ One more thing — don't overthink it. You signed up for a reason. Trust that.
 Kay`,
   },
 
-  // Stage 3: "Final Reminder" — 2 days before event
+  // Stage 2: "Final Reminder" — 2 days before
   {
-    stage: 3,
+    stage: 2,
     subject: "48 hours to go",
     trigger: { type: "before_event", days: 2 },
-    body: (name) => `Hey ${name},
+    body: (name, ctx) => `Hey ${name},
 
-Alpha Reset starts in 48 hours. Midnight on ${EVENT_START_WEEKDAY} ${EVENT_START_ORDINAL}.
+Alpha Reset starts in 48 hours. Midnight on ${ctx.startWeekday} ${ctx.startOrdinal}.
 
 Eat well today and tomorrow. Hydrate. Get your affairs in order.
 
-${EVENT_START_WEEKDAY} night we have a kick-off call at ${GROUP_CALL_TIME} on the Bestday group. Be there.
+${ctx.startWeekday} night we have a kick-off call at ${GROUP_CALL_TIME} on the Bestday group. Be there.
 
 If you haven't joined the group yet: ${BESTDAY_URL}
 
 Remember why you signed up. Hold onto that.
 
-See you ${EVENT_START_WEEKDAY} night.
+See you ${ctx.startWeekday} night.
 
 Kay`,
   },
 
-  // Stage 4: Day 1 — "Reset"
+  // Stage 3: Day 1 — "Reset"
   {
-    stage: 4,
+    stage: 3,
     subject: "Day 1: Reset",
     trigger: { type: "event_day", day: 1 },
     body: (name) => `${name},
@@ -134,9 +141,9 @@ You've got this.
 Kay`,
   },
 
-  // Stage 5: Day 2 — "Reflect"
+  // Stage 4: Day 2 — "Reflect"
   {
-    stage: 5,
+    stage: 4,
     subject: "Day 2: Reflect",
     trigger: { type: "event_day", day: 2 },
     body: (name) => `${name},
@@ -162,9 +169,9 @@ Keep going.
 Kay`,
   },
 
-  // Stage 6: Day 3 — "Focus"
+  // Stage 5: Day 3 — "Focus"
   {
-    stage: 6,
+    stage: 5,
     subject: "Day 3: Focus",
     trigger: { type: "event_day", day: 3 },
     body: (name) => `${name},
@@ -188,12 +195,12 @@ Almost there.
 Kay`,
   },
 
-  // Stage 7: Day after — "You Did It"
+  // Stage 6: Day after — "You Did It"
   {
-    stage: 7,
+    stage: 6,
     subject: "You did it 🦾",
     trigger: { type: "after_event", days: 1 },
-    body: (name) => `${name},
+    body: (name, ctx) => `${name},
 
 You did it. 72 hours. No food. Full life review. You're part of the 1% now.
 
@@ -205,7 +212,7 @@ How to break your fast safely:
 
 More importantly — look at what you wrote down on Day 3. Those goals. That plan. That's your compass for the next 90 days. Don't let it collect dust.
 
-The next Alpha Reset is in ${NEXT_RESET_HINT.split(" ")[0]}. Between now and then, execute.
+The next Alpha Reset is in ${ctx.nextResetHint}. Between now and then, execute.
 
 Stay connected on Bestday. The accountability doesn't stop when the fast ends.
 

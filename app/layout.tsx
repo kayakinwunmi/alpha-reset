@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { EVENT_RANGE_LABEL, SITE_URL } from "@/lib/event";
+import { SITE_URL } from "@/lib/event";
+import { getNextSession } from "@/lib/sessions";
+import { sessionRangeLabel } from "@/lib/session-types";
 
 const siteUrl = SITE_URL;
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const next = await getNextSession();
+  const rangeLabel = sessionRangeLabel(next.starts_at, next.ends_at);
+  return buildMetadata(rangeLabel);
+}
+
+function buildMetadata(rangeLabel: string): Metadata {
+  return {
   title: "Alpha Reset — Live Like The 1%",
   description: "A quarterly 3-day water-fasting + life review challenge. 72 hours. No food. No distractions. Just you, God, and the truth. Every quarter, become a completely different human being. By choice.",
   metadataBase: new URL(siteUrl),
@@ -12,7 +21,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Kay Akinwunmi" }],
   openGraph: {
     title: "Alpha Reset — Live Like The 1%",
-    description: `72 hours. No food. No distractions. A quarterly water-fasting + life review challenge. Join us ${EVENT_RANGE_LABEL}.`,
+    description: `72 hours. No food. No distractions. A quarterly water-fasting + life review challenge. Join us ${rangeLabel}.`,
     url: siteUrl,
     siteName: "Alpha Reset",
     images: [
@@ -42,7 +51,8 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-};
+  };
+}
 
 export default function RootLayout({
   children,

@@ -1,49 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { T } from "@/lib/tables";
 import { ADMIN_COOKIE, isValidAdminToken } from "@/lib/admin-auth";
 import { sendBrandedEmail } from "@/lib/email";
 
-interface SignupRow {
+interface Recipient {
   id: string;
   first_name: string;
   email: string;
 }
 
-// Broadcast a message to all signups or a selected subset.
-// Body supports {{name}} personalization; every send is wrapped in the
-// branded template so broadcasts look like the rest of the sequence.
+// Broadcast a message to all signups, a selected subset, or everyone
+// confirmed for a specific session. Body supports {{name}} personalization;
+// every send is wrapped in the branded template so broadcasts look like the
+// rest of the sequence.
 export async function POST(req: NextRequest) {
   if (!isValidAdminToken(req.cookies.get(ADMIN_COOKIE)?.value)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { subject, body, recipientIds } = await req.json().catch(() => ({}));
+  const { subject, body, recipientIds, sessionId } = await req.json().catch(() => ({}));
 
   if (!subject || !body || typeof subject !== "string" || typeof body !== "string") {
     return NextResponse.json({ error: "Subject and body are required" }, { status: 400 });
   }
-  if (recipientIds !== "all" && !Array.isArray(recipientIds)) {
-    return NextResponse.json({ error: "recipientIds must be \"all\" or an array of ids" }, { status: 400 });
-  }
-  if (Array.isArray(recipientIds) && recipientIds.length === 0) {
-    return NextResponse.json({ error: "No recipients selected" }, { status: 400 });
-  }
 
   const supabase = getSupabase();
-  let query = supabase.from("signups").select("id, first_name, email");
-  if (recipientIds !== "all") {
-    query = query.in("id", recipientIds);
-  }
-  const { data: recipients, error } = await query;
+  let recipients: Recipient[] = [];
+  let audience = "all";
 
-  if (error || !recipients) {
-    return NextResponse.json({ error: "Failed to fetch recipients" }, { status: 500 });
+  if (sessionId && typeof sessionId === "string") {
+    // Everyone confirmed for one session.
+    const [{ data: session }, { data: regs, error: regErr }] = await Promise.all([
+      supabase.from(T.sessions).select("title").eq("id", sessionId).single(),
+      supabase
+        .from(T.registrations)
+        .select(`person:${T.signups}(id, first_name, email)`)
+        .eq("session_id", sessionId)
+        .eq("status", "confirmed"),
+    ]);
+    if (regErr) {
+      return NextResponse.json({ error: "Failed to fetch session recipients" }, { status: 500 });
+    }
+    recipients = (regs || [])
+      .map((r) => (Array.isArray(r.person) ? r.person[0] : r.person) as Recipient | null)
+      .filter((p): p is Recipient => Boolean(p));
+    audience = `session: ${session?.title || sessionId}`;
+  } else if (recipientIds === "all" || Array.isArray(recipientIds)) {
+    if (Array.isArray(recipientIds) && recipientIds.length === 0) {
+      return NextResponse.json({ error: "No recipients selected" }, { status: 400 });
+    }
+    let query = supabase.from(T.signups).select("id, first_name, email");
+    if (recipientIds !== "all") {
+      query = query.in("id", recipientIds);
+      audience = "selected";
+    }
+    const { data, error } = await query;
+    if (error || !data) {
+      return NextResponse.json({ error: "Failed to fetch recipients" }, { status: 500 });
+    }
+    recipients = data as Recipient[];
+  } else {
+    return NextResponse.json(
+      { error: "Provide recipientIds (\"all\" or an array of ids) or a sessionId" },
+      { status: 400 }
+    );
+  }
+
+  if (recipients.length === 0) {
+    return NextResponse.json({ error: "No recipients matched" }, { status: 400 });
   }
 
   const sent: string[] = [];
   const failed: { email: string; error: string }[] = [];
 
-  for (const r of recipients as SignupRow[]) {
+  for (const r of recipients) {
     const firstName = r.first_name.split(" ")[0];
     try {
       await sendBrandedEmail({
@@ -59,11 +90,11 @@ export async function POST(req: NextRequest) {
 
   // Log the broadcast — best-effort, the messages table may not be migrated yet.
   try {
-    await supabase.from("messages").insert({
+    await supabase.from(T.messages).insert({
       subject,
       body,
       recipient_count: sent.length,
-      audience: recipientIds === "all" ? "all" : "selected",
+      audience,
     });
   } catch (logErr) {
     console.error("Failed to log broadcast:", logErr);

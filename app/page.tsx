@@ -1,14 +1,20 @@
-"use client";
-
 import { SignupForm } from "./components/SignupForm";
 import { Countdown } from "./components/Countdown";
 import { FAQ } from "./components/FAQ";
 import { AudioPlayer } from "./components/AudioPlayer";
-import { EVENT_START_ISO, EVENT_START_LABEL, EVENT_RANGE_LABEL } from "@/lib/event";
+import { getOpenSessions } from "@/lib/sessions";
+import { toPublicSession } from "@/lib/session-types";
 
 import Image from "next/image";
 
-export default function Home() {
+// Session dates come from the database (managed in /admin); refresh the
+// static page every 5 minutes so schedule changes appear without a redeploy.
+export const revalidate = 300;
+
+export default async function Home() {
+  const sessions = (await getOpenSessions()).map(toPublicSession);
+  const next = sessions[0];
+
   return (
     <main className="min-h-screen">
       <AudioPlayer />
@@ -33,7 +39,7 @@ export default function Home() {
             Live like the 1%.
           </p>
           <p className="text-white/70 font-sans text-sm tracking-[0.2em] uppercase mb-10">
-            72 hours · No food · No distractions · {EVENT_RANGE_LABEL}
+            72 hours · No food · No distractions · {next.rangeLabel}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
@@ -74,11 +80,11 @@ export default function Home() {
 
           <p className="text-lg md:text-xl leading-relaxed text-[var(--ink)] mb-2">
             The next one starts{" "}
-            <span className="font-semibold text-[var(--accent)]">{EVENT_START_LABEL}</span>.
+            <span className="font-semibold text-[var(--accent)]">{next.startLabel}</span>.
           </p>
 
           <div className="my-12">
-            <Countdown targetDate={EVENT_START_ISO} />
+            <Countdown targetDate={next.startsAt} />
           </div>
 
           <div className="border-t border-[var(--rule)] my-16" />
@@ -246,8 +252,48 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Is this for you */}
+      {/* The Calendar — upcoming sessions */}
       <section className="py-16 px-6">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-light text-[var(--ink)] mb-4 text-center">
+            The Calendar
+          </h2>
+          <p className="text-lg text-[var(--ink-light)] text-center mb-12">
+            One reset every quarter — and once a year, we do it together in person.
+            Register for the next one, or plan the whole year.
+          </p>
+          <div className="space-y-0">
+            {sessions.map((s) => (
+              <div
+                key={s.id}
+                className="flex flex-wrap items-baseline justify-between gap-3 py-6 border-b border-[var(--rule)] first:border-t"
+              >
+                <div>
+                  <p className="text-xl text-[var(--ink)]">
+                    {s.rangeLabel}
+                    {s.kind === "in_person" && (
+                      <span className="ml-3 align-middle inline-block px-2 py-0.5 font-sans text-[10px] tracking-[0.15em] uppercase bg-[var(--accent)] text-white">
+                        In person
+                      </span>
+                    )}
+                  </p>
+                  <p className="font-sans text-sm text-[var(--ink-faint)] mt-1">
+                    {s.title}
+                    {s.location ? ` · ${s.location}` : ""}
+                    {s.notes ? ` — ${s.notes}` : ""}
+                  </p>
+                </div>
+                <a href="#signup" className="font-sans text-sm text-[var(--accent)] underline shrink-0">
+                  {s.kind === "in_person" ? "Request a place ↓" : "Sign up ↓"}
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Is this for you */}
+      <section className="py-16 px-6 bg-[var(--paper-dark)]">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-light text-[var(--ink)] mb-12 text-center">
             Is This For You?
@@ -314,7 +360,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <FAQ />
+      <FAQ nextRangeLabel={next.rangeLabel} nextWeekday={next.startWeekday} />
 
       {/* Signup — the invitation */}
       <section id="signup" className="py-20 px-6 bg-[var(--paper-dark)]">
@@ -323,7 +369,7 @@ export default function Home() {
             Join Us
           </h2>
           <p className="text-lg text-[var(--ink-light)] mb-3">
-            Next session: <span className="font-semibold text-[var(--accent)]">{EVENT_RANGE_LABEL}</span>
+            Next session: <span className="font-semibold text-[var(--accent)]">{next.rangeLabel}</span>
           </p>
           <p className="text-[var(--ink-faint)] mb-10 font-sans text-sm">
             Alpha Reset is free. You&apos;ll need a{" "}
@@ -333,7 +379,7 @@ export default function Home() {
             membership ($249/year) to join the group.
           </p>
 
-          <SignupForm />
+          <SignupForm sessions={sessions} />
         </div>
       </section>
 
