@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  EVENT_RANGE_LABEL,
-  EVENT_START_WEEKDAY,
-  GROUP_CALL_TIME,
-  BESTDAY_URL,
-} from "@/lib/event";
+import { GROUP_CALL_TIME, BESTDAY_URL } from "@/lib/event";
+import { getNextSession } from "@/lib/sessions";
+import { toPublicSession } from "@/lib/session-types";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "The Field Guide — Alpha Reset",
@@ -62,7 +61,9 @@ const days = [
   },
 ];
 
-export default function GuidePage() {
+export default async function GuidePage() {
+  const next = toPublicSession(await getNextSession());
+
   return (
     <main className="min-h-screen">
       {/* Header */}
@@ -78,7 +79,7 @@ export default function GuidePage() {
         </p>
         <p className="text-[var(--ink)]">
           Next reset:{" "}
-          <span className="font-semibold text-[var(--accent)]">{EVENT_RANGE_LABEL}</span>
+          <span className="font-semibold text-[var(--accent)]">{next.rangeLabel}</span>
           {" · "}
           <a href="/api/calendar" className="font-sans text-sm underline text-[var(--accent)]">
             Add to calendar
@@ -110,7 +111,7 @@ export default function GuidePage() {
             {[
               {
                 title: "Clear your calendar",
-                body: `Block ${EVENT_RANGE_LABEL}. Tell people you're offline. No exceptions, no "quick calls".`,
+                body: `Block ${next.rangeLabel}. Tell people you're offline. No exceptions, no "quick calls".`,
               },
               {
                 title: "Set your intention",
@@ -202,9 +203,9 @@ export default function GuidePage() {
         <div className="max-w-2xl mx-auto">
           <SectionLabel>The three days</SectionLabel>
           <p className="text-lg text-[var(--ink-light)] mb-12">
-            The fast begins at midnight on {EVENT_START_WEEKDAY} and ends at 6pm on Friday.
+            The fast begins at midnight on {next.startWeekday} and ends at 6pm on Friday.
             There&apos;s a group call every evening at {GROUP_CALL_TIME} on Bestday — kick-off is{" "}
-            {EVENT_START_WEEKDAY} night.
+            {next.startWeekday} night.
           </p>
 
           {days.map((day) => (
@@ -263,7 +264,7 @@ export default function GuidePage() {
       <section className="py-16 px-6 bg-[var(--paper-dark)] text-center">
         <div className="max-w-xl mx-auto">
           <p className="text-2xl font-light text-[var(--ink)] mb-8">
-            Ready? The next reset is {EVENT_RANGE_LABEL}.
+            Ready? The next reset is {next.rangeLabel}.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

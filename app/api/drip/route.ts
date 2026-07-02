@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { sendBrandedEmail } from "@/lib/email";
-import { drips } from "@/lib/drip-emails";
-import { EVENT_START, EVENT_END } from "@/lib/event";
+import { STORY_DRIPS, SESSION_DRIPS, SessionEmailCtx } from "@/lib/drip-emails";
+import { getSessionAfter } from "@/lib/sessions";
+import {
+  SessionRow,
+  sessionRangeLabel,
+  sessionStartOrdinal,
+  sessionStartWeekday,
+  sessionMonth,
+} from "@/lib/session-types";
 
-// Vercel cron calls this daily
-// Also protected by a secret so it can't be triggered externally
+const RESEND_GUARD_HOURS = 20;
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+interface PersonRef {
+  id: string;
+  first_name: string;
+  email: string;
+}
+
+// Vercel cron calls this daily. Two passes:
+//   1. Story pass  — "why I started", once per person, 2 days after signup.
+//   2. Session pass — the countdown sequence per confirmed registration,
+//      timed against that session's dates.
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
@@ -18,94 +36,127 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const results: string[] = [];
 
-  // Get all signups
-  const { data: signups, error } = await supabase
+  // ---- Pass 1: story emails (person-level) ----------------------------------
+  const story = STORY_DRIPS[0];
+  const { data: pendingStory, error: storyErr } = await supabase
     .from("signups")
-    .select("*")
-    .order("created_at", { ascending: true });
+    .select("id, first_name, email, created_at, story_stage")
+    .or("story_stage.is.null,story_stage.eq.0");
 
-  if (error || !signups) {
-    return NextResponse.json({ error: "Failed to fetch signups", details: error }, { status: 500 });
-  }
+  if (storyErr) {
+    // Pre-migration database — skip quietly rather than fail the whole run.
+    results.push(`story pass skipped: ${storyErr.message}`);
+  } else {
+    for (const person of pendingStory || []) {
+      const daysSinceSignup = (now.getTime() - new Date(person.created_at).getTime()) / DAY_MS;
+      if (daysSinceSignup < story.afterSignupDays) continue;
 
-  for (const signup of signups) {
-    const currentStage = signup.drip_stage || 0;
-    const signupDate = new Date(signup.created_at);
-
-    // Find the next email to send
-    const nextDrip = drips.find((d) => d.stage === currentStage + 1);
-    if (!nextDrip) {
-      results.push(`${signup.first_name}: all drips sent`);
-      continue;
-    }
-
-    // Check if it's time to send
-    let shouldSend = false;
-    const trigger = nextDrip.trigger;
-
-    if (trigger.type === "after_signup") {
-      const daysSinceSignup = (now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24);
-      shouldSend = daysSinceSignup >= trigger.days;
-    } else if (trigger.type === "before_event") {
-      const daysUntilEvent = (EVENT_START.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-      shouldSend = daysUntilEvent <= trigger.days;
-    } else if (trigger.type === "after_event") {
-      const daysSinceEnd = (now.getTime() - EVENT_END.getTime()) / (1000 * 60 * 60 * 24);
-      shouldSend = daysSinceEnd >= trigger.days;
-    } else if (trigger.type === "event_day") {
-      const eventDay = new Date(EVENT_START);
-      eventDay.setDate(eventDay.getDate() + trigger.day - 1);
-      // Send if we're on or past this event day
-      const isTodayOrPast =
-        now.getFullYear() === eventDay.getFullYear() &&
-        now.getMonth() === eventDay.getMonth() &&
-        now.getDate() >= eventDay.getDate();
-      // Also check we haven't gone more than 1 day past
-      const daysPast = (now.getTime() - eventDay.getTime()) / (1000 * 60 * 60 * 24);
-      shouldSend = isTodayOrPast || (daysPast >= 0 && daysPast <= 1.5);
-    }
-
-    // Don't re-send if we already sent today
-    if (signup.last_drip_at) {
-      const lastSent = new Date(signup.last_drip_at);
-      const hoursSinceLastSend = (now.getTime() - lastSent.getTime()) / (1000 * 60 * 60);
-      if (hoursSinceLastSend < 20) {
-        results.push(`${signup.first_name}: stage ${currentStage}, waiting (sent ${Math.round(hoursSinceLastSend)}h ago)`);
-        continue;
+      const firstName = person.first_name.split(" ")[0];
+      try {
+        await sendBrandedEmail({
+          to: person.email,
+          subject: story.subject,
+          text: story.body(firstName),
+        });
+        await supabase.from("signups").update({ story_stage: story.stage }).eq("id", person.id);
+        results.push(`${person.first_name}: ✅ story — "${story.subject}"`);
+      } catch (err) {
+        results.push(`${person.first_name}: ❌ story failed — ${errMessage(err)}`);
       }
     }
+  }
 
-    if (!shouldSend) {
-      results.push(`${signup.first_name}: stage ${currentStage}, not yet time for stage ${nextDrip.stage}`);
+  // ---- Pass 2: session countdown emails (per registration) ------------------
+  // Include sessions that ended in the last week so the day-after email sends.
+  const { data: sessions, error: sessionsErr } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("status", "open")
+    .gt("ends_at", new Date(now.getTime() - 7 * DAY_MS).toISOString())
+    .order("starts_at", { ascending: true });
+
+  if (sessionsErr) {
+    results.push(`session pass skipped: ${sessionsErr.message}`);
+    return NextResponse.json({ ok: true, timestamp: now.toISOString(), results });
+  }
+
+  for (const session of (sessions as SessionRow[]) || []) {
+    const following = await getSessionAfter(session);
+    const ctx: SessionEmailCtx = {
+      rangeLabel: sessionRangeLabel(session.starts_at, session.ends_at),
+      startOrdinal: sessionStartOrdinal(session.starts_at),
+      startWeekday: sessionStartWeekday(session.starts_at),
+      nextResetHint: following ? sessionMonth(following.starts_at) : "next quarter",
+    };
+    const startsAt = new Date(session.starts_at);
+    const endsAt = new Date(session.ends_at);
+
+    const { data: regs, error: regsErr } = await supabase
+      .from("registrations")
+      .select("id, drip_stage, last_drip_at, person:signups(id, first_name, email)")
+      .eq("session_id", session.id)
+      .eq("status", "confirmed");
+
+    if (regsErr) {
+      results.push(`${session.title}: registrations fetch failed — ${regsErr.message}`);
       continue;
     }
 
-    // Send the email
-    const firstName = signup.first_name.split(" ")[0]; // Use first name only
-    try {
-      await sendBrandedEmail({
-        to: signup.email,
-        subject: nextDrip.subject,
-        text: nextDrip.body(firstName),
-      });
+    for (const reg of regs || []) {
+      const person = (Array.isArray(reg.person) ? reg.person[0] : reg.person) as PersonRef | null;
+      if (!person) continue;
 
-      // Update stage
-      await supabase
-        .from("signups")
-        .update({ drip_stage: nextDrip.stage, last_drip_at: now.toISOString() })
-        .eq("id", signup.id);
+      const currentStage = reg.drip_stage || 0;
+      const nextDrip = SESSION_DRIPS.find((d) => d.stage === currentStage + 1);
+      if (!nextDrip) continue;
 
-      results.push(`${signup.first_name}: ✅ sent stage ${nextDrip.stage} — "${nextDrip.subject}"`);
-    } catch (emailErr: unknown) {
-      const message = emailErr instanceof Error ? emailErr.message : String(emailErr);
-      results.push(`${signup.first_name}: ❌ failed stage ${nextDrip.stage} — ${message}`);
+      // Is it time?
+      let shouldSend = false;
+      const trigger = nextDrip.trigger;
+      if (trigger.type === "before_event") {
+        const daysUntil = (startsAt.getTime() - now.getTime()) / DAY_MS;
+        shouldSend = daysUntil <= trigger.days && daysUntil > -1;
+      } else if (trigger.type === "event_day") {
+        const eventDay = new Date(startsAt);
+        eventDay.setDate(eventDay.getDate() + trigger.day - 1);
+        const daysPast = (now.getTime() - eventDay.getTime()) / DAY_MS;
+        shouldSend = daysPast >= 0 && daysPast <= 1.5;
+      } else if (trigger.type === "after_event") {
+        const daysSinceEnd = (now.getTime() - endsAt.getTime()) / DAY_MS;
+        shouldSend = daysSinceEnd >= trigger.days;
+      }
+      if (!shouldSend) continue;
+
+      // Don't re-send if we already sent recently.
+      if (reg.last_drip_at) {
+        const hoursSince = (now.getTime() - new Date(reg.last_drip_at).getTime()) / (1000 * 60 * 60);
+        if (hoursSince < RESEND_GUARD_HOURS) {
+          results.push(`${person.first_name} @ ${session.title}: waiting (sent ${Math.round(hoursSince)}h ago)`);
+          continue;
+        }
+      }
+
+      const firstName = person.first_name.split(" ")[0];
+      try {
+        await sendBrandedEmail({
+          to: person.email,
+          subject: nextDrip.subject,
+          text: nextDrip.body(firstName, ctx),
+        });
+        await supabase
+          .from("registrations")
+          .update({ drip_stage: nextDrip.stage, last_drip_at: now.toISOString() })
+          .eq("id", reg.id);
+        results.push(`${person.first_name} @ ${session.title}: ✅ stage ${nextDrip.stage} — "${nextDrip.subject}"`);
+      } catch (err) {
+        results.push(`${person.first_name} @ ${session.title}: ❌ stage ${nextDrip.stage} — ${errMessage(err)}`);
+      }
     }
   }
 
-  return NextResponse.json({
-    ok: true,
-    processed: signups.length,
-    timestamp: now.toISOString(),
-    results,
-  });
+  return NextResponse.json({ ok: true, timestamp: now.toISOString(), results });
+}
+
+function errMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }
