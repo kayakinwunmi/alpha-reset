@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase";
 import { T } from "@/lib/tables";
 import { ADMIN_COOKIE, isValidAdminToken } from "@/lib/admin-auth";
+
+// The public pages cache sessions for 5 minutes (ISR); purge them on every
+// session change so edits made in The Ledger appear on the site immediately.
+function refreshPublicPages() {
+  revalidatePath("/");
+  revalidatePath("/guide");
+}
 
 const EDITABLE_FIELDS = [
   "title",
@@ -59,6 +67,7 @@ export async function POST(req: NextRequest) {
     console.error("Create session error:", error);
     return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
   }
+  refreshPublicPages();
   return NextResponse.json({ success: true, session: data });
 }
 
@@ -82,6 +91,7 @@ export async function PATCH(req: NextRequest) {
     console.error("Update session error:", error);
     return NextResponse.json({ error: "Failed to update session" }, { status: 500 });
   }
+  refreshPublicPages();
   return NextResponse.json({ success: true });
 }
 
@@ -111,5 +121,6 @@ export async function DELETE(req: NextRequest) {
     console.error("Delete session error:", error);
     return NextResponse.json({ error: "Failed to delete session" }, { status: 500 });
   }
+  refreshPublicPages();
   return NextResponse.json({ success: true });
 }
