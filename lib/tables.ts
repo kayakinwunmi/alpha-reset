@@ -9,4 +9,5 @@ export const T = {
   registrations: "ar_registrations",
   messages: "ar_messages",
   emailLog: "ar_email_log",
+  emailTemplates: "ar_email_templates",
 } as const;

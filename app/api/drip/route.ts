@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { T } from "@/lib/tables";
-import { sendBrandedEmail } from "@/lib/email";
-import { STORY_DRIPS, SESSION_DRIPS, SessionEmailCtx } from "@/lib/drip-emails";
+import {
+  sendBrandedEmail,
+  loadTemplateOverrides,
+  renderFromTemplate,
+} from "@/lib/email";
+import {
+  STORY_DRIPS,
+  SESSION_DRIPS,
+  SessionEmailCtx,
+  sessionDripTokens,
+} from "@/lib/drip-emails";
 import { getSessionAfter } from "@/lib/sessions";
 import {
   SessionRow,
@@ -38,6 +47,9 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const results: string[] = [];
 
+  // Admin content overrides, loaded once for the whole run.
+  const overrides = await loadTemplateOverrides();
+
   // ---- Pass 1: story emails (person-level) ----------------------------------
   const story = STORY_DRIPS[0];
   const { data: pendingStory, error: storyErr } = await supabase
@@ -54,15 +66,16 @@ export async function GET(req: NextRequest) {
       if (daysSinceSignup < story.afterSignupDays) continue;
 
       const firstName = person.first_name.split(" ")[0];
+      const storyEmail = renderFromTemplate(story.slug, { name: firstName }, overrides);
       try {
         await sendBrandedEmail({
           to: person.email,
-          subject: story.subject,
-          text: story.body(firstName),
+          subject: storyEmail.subject,
+          text: storyEmail.text,
           log: { personId: person.id, type: "story" },
         });
         await supabase.from(T.signups).update({ story_stage: story.stage }).eq("id", person.id);
-        results.push(`${person.first_name}: ✅ story — "${story.subject}"`);
+        results.push(`${person.first_name}: ✅ story — "${storyEmail.subject}"`);
       } catch (err) {
         results.push(`${person.first_name}: ❌ story failed — ${errMessage(err)}`);
       }
@@ -141,18 +154,23 @@ export async function GET(req: NextRequest) {
       }
 
       const firstName = person.first_name.split(" ")[0];
+      const dripEmail = renderFromTemplate(
+        nextDrip.slug,
+        sessionDripTokens(firstName, ctx),
+        overrides
+      );
       try {
         await sendBrandedEmail({
           to: person.email,
-          subject: nextDrip.subject,
-          text: nextDrip.body(firstName, ctx),
+          subject: dripEmail.subject,
+          text: dripEmail.text,
           log: { personId: person.id, type: "drip", sessionId: session.id },
         });
         await supabase
           .from(T.registrations)
           .update({ drip_stage: nextDrip.stage, last_drip_at: now.toISOString() })
           .eq("id", reg.id);
-        results.push(`${person.first_name} @ ${session.title}: ✅ stage ${nextDrip.stage} — "${nextDrip.subject}"`);
+        results.push(`${person.first_name} @ ${session.title}: ✅ stage ${nextDrip.stage} — "${dripEmail.subject}"`);
       } catch (err) {
         results.push(`${person.first_name} @ ${session.title}: ❌ stage ${nextDrip.stage} — ${errMessage(err)}`);
       }

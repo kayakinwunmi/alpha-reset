@@ -10,6 +10,7 @@ import {
 } from "@/lib/session-types";
 import { SessionsPanel } from "./SessionsPanel";
 import { PersonDrawer } from "./PersonDrawer";
+import { EmailTemplatesDrawer } from "./EmailTemplatesDrawer";
 import { card, btnPrimary, btnGhost, inputClass, formatDate } from "./ui";
 
 export interface Signup {
@@ -39,6 +40,13 @@ export interface EmailLogRow {
   subject: string;
   session_id: string | null;
   created_at: string;
+}
+
+export interface TemplateOverride {
+  slug: string;
+  subject: string;
+  body: string;
+  updated_at: string;
 }
 
 // Most recent emails shown per person in the drawer — keeps it fast as the
@@ -294,12 +302,14 @@ export function AdminDashboard({
   registrations,
   broadcasts,
   emailLog,
+  templateOverrides,
 }: {
   signups: Signup[];
   sessions: SessionRow[];
   registrations: RegistrationRow[];
   broadcasts: Broadcast[];
   emailLog: EmailLogRow[];
+  templateOverrides: TemplateOverride[];
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -309,6 +319,7 @@ export function AdminDashboard({
   const [toast, setToast] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const sessionsById = useMemo(() => new Map(sessions.map((s) => [s.id, s])), [sessions]);
 
@@ -517,9 +528,17 @@ export function AdminDashboard({
           <Sparkline signups={signups} />
         </div>
         <div className={card}>
-          <p className="font-sans text-xs uppercase tracking-wider text-[var(--ink-faint)] mb-4">
-            Drip progress{nextSession ? ` — ${nextSession.title}` : ""}
-          </p>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <p className="font-sans text-xs uppercase tracking-wider text-[var(--ink-faint)]">
+              Drip progress{nextSession ? ` — ${nextSession.title}` : ""}
+            </p>
+            <button
+              onClick={() => setTemplatesOpen(true)}
+              className="font-sans text-xs tracking-wider uppercase text-[var(--accent)] hover:underline shrink-0"
+            >
+              View / edit emails →
+            </button>
+          </div>
           {nextSession ? (
             <DripFunnel
               regs={(regsBySession.get(nextSession.id) || []).filter((r) => r.status === "confirmed")}
@@ -724,6 +743,14 @@ export function AdminDashboard({
           />
         );
       })()}
+
+      {templatesOpen && (
+        <EmailTemplatesDrawer
+          overrides={templateOverrides}
+          onClose={() => setTemplatesOpen(false)}
+          onToast={setToast}
+        />
+      )}
 
       {composerOpen && (
         <Composer
