@@ -9,6 +9,7 @@ import {
   sessionRangeLabel,
 } from "@/lib/session-types";
 import { SessionsPanel } from "./SessionsPanel";
+import { PersonDrawer } from "./PersonDrawer";
 import { card, btnPrimary, btnGhost, inputClass, formatDate } from "./ui";
 
 export interface Signup {
@@ -290,6 +291,7 @@ export function AdminDashboard({
   const [composerOpen, setComposerOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
 
   const sessionsById = useMemo(() => new Map(sessions.map((s) => [s.id, s])), [sessions]);
 
@@ -578,7 +580,14 @@ export function AdminDashboard({
                       className="accent-[var(--accent)]"
                     />
                   </td>
-                  <td className="p-3 text-[var(--ink)]">{s.first_name}</td>
+                  <td className="p-3">
+                    <button
+                      onClick={() => setSelectedPersonId(s.id)}
+                      className="text-[var(--ink)] hover:text-[var(--accent)] hover:underline text-left"
+                    >
+                      {s.first_name}
+                    </button>
+                  </td>
                   <td className="p-3 text-[var(--ink-light)]">
                     <a href={`mailto:${s.email}`} className="hover:text-[var(--accent)]">{s.email}</a>
                   </td>
@@ -662,6 +671,29 @@ export function AdminDashboard({
           </ul>
         )}
       </section>
+
+      {(() => {
+        const person = selectedPersonId
+          ? signups.find((s) => s.id === selectedPersonId)
+          : null;
+        if (!person) return null;
+        return (
+          <PersonDrawer
+            person={person}
+            registrations={regsByPerson.get(person.id) || []}
+            sessionsById={sessionsById}
+            broadcasts={broadcasts}
+            onClose={() => setSelectedPersonId(null)}
+            onMessage={(p) => {
+              setSelected(new Set([p.id]));
+              setSelectedPersonId(null);
+              setComposerOpen(true);
+            }}
+            onRemove={deleteSignup}
+            removing={deletingId === person.id}
+          />
+        );
+      })()}
 
       {composerOpen && (
         <Composer
