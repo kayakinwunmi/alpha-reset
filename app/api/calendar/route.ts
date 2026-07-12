@@ -6,8 +6,19 @@ import { sessionRangeLabel } from "@/lib/session-types";
 // Downloadable .ics so people can block the dates the moment they sign up.
 // /api/calendar            → the next upcoming session
 // /api/calendar?session=id → a specific session
+//
+// The event is ALL-DAY spanning the session dates: session times are stored
+// in UTC, and timed entries would show as 1am–7pm for UK users in summer.
+// All-day is timezone-proof and matches how people actually block the days.
 
-function icsDate(d: Date): string {
+/** "20260624" — date-only ICS value from an ISO timestamp. */
+function icsDate(iso: string, addDays = 0): string {
+  const d = new Date(iso);
+  d.setUTCDate(d.getUTCDate() + addDays);
+  return d.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
+function icsTimestamp(d: Date): string {
   return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
@@ -21,13 +32,12 @@ export async function GET(req: NextRequest) {
     ? (await getSessionById(sessionId)) || (await getNextSession())
     : await getNextSession();
 
-  const start = new Date(session.starts_at);
-  const end = new Date(session.ends_at);
   const rangeLabel = sessionRangeLabel(session.starts_at, session.ends_at);
 
   const uid = `alpha-reset-${session.id}@alphareset.co`;
   const descriptionParts = [
     "72 hours. No food. No distractions. A water fast + deep life review.",
+    "Last meal by 6pm the evening before; the fast ends at 6pm on the final day.",
     "",
     `Field Guide: ${SITE_URL}/guide`,
     `Group on Bestday: ${BESTDAY_URL}`,
@@ -45,9 +55,10 @@ export async function GET(req: NextRequest) {
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${uid}`,
-    `DTSTAMP:${icsDate(start)}`,
-    `DTSTART:${icsDate(start)}`,
-    `DTEND:${icsDate(end)}`,
+    `DTSTAMP:${icsTimestamp(new Date())}`,
+    // All-day event; DTEND is exclusive, so it's the day after the end date.
+    `DTSTART;VALUE=DATE:${icsDate(session.starts_at)}`,
+    `DTEND;VALUE=DATE:${icsDate(session.ends_at, 1)}`,
     `SUMMARY:${escapeIcsText(`${session.title} — ${rangeLabel}`)}`,
     `DESCRIPTION:${description}`,
     `URL:${SITE_URL}`,

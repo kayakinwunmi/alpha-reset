@@ -16,7 +16,7 @@ The site for [alphareset.co](https://www.alphareset.co) — a quarterly 72-hour 
 
 ## Sessions: how scheduling works
 
-Sessions live in the database and are managed entirely from **The Ledger**. Create the next 2–5 resets ahead of time; they appear on the site's Calendar section and in the signup form immediately (pages revalidate every 5 minutes).
+Sessions live in the database and are managed entirely from **The Ledger**. Create the next 2–5 resets ahead of time; they appear on the site's Calendar section and in the signup form immediately (session changes purge the page cache on save; a 5-minute background revalidation is the fallback).
 
 - **Virtual sessions** — signup confirms instantly.
 - **In-person retreats** (`kind = in_person`) — signup becomes a *request*. Requests show up at the top of the dashboard for you to approve or decline; both actions email the person. Capacity and location are shown on the site; money/contributions are handled off-platform (put "shared costs — details in the group" in the session's public note).

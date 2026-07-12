@@ -80,6 +80,7 @@ export function SignupForm({ sessions }: { sessions: PublicSession[] }) {
     const confirmed = outcomes.filter((o) => o.outcome === "confirmed");
     const requested = outcomes.filter((o) => o.outcome === "requested");
     const already = outcomes.filter((o) => o.outcome === "already");
+    const anyNew = confirmed.length + requested.length > 0;
 
     return (
       <div className="py-8 text-center">
@@ -101,7 +102,11 @@ export function SignupForm({ sessions }: { sessions: PublicSession[] }) {
               You were already registered for <span className="text-[var(--ink)]">{o.rangeLabel}</span>.
             </p>
           ))}
-          <p className="pt-2">Check your email for the details.</p>
+          <p className="pt-2">
+            {anyNew
+              ? "Check your email for the details."
+              : "No new email this time — you already had your place."}
+          </p>
         </div>
 
         <div className="max-w-sm mx-auto text-left space-y-4 mb-10">
@@ -109,11 +114,31 @@ export function SignupForm({ sessions }: { sessions: PublicSession[] }) {
             {
               n: "1",
               label: "Block the dates",
-              action: (
-                <a href="/api/calendar" className="underline text-[var(--accent)]">
-                  Add to your calendar
-                </a>
-              ),
+              action:
+                outcomes.length <= 1 ? (
+                  <a
+                    href={
+                      outcomes[0]
+                        ? `/api/calendar?session=${outcomes[0].sessionId}`
+                        : "/api/calendar"
+                    }
+                    className="underline text-[var(--accent)]"
+                  >
+                    Add to your calendar
+                  </a>
+                ) : (
+                  <span className="space-x-3">
+                    {outcomes.map((o) => (
+                      <a
+                        key={o.sessionId}
+                        href={`/api/calendar?session=${o.sessionId}`}
+                        className="underline text-[var(--accent)]"
+                      >
+                        {o.rangeLabel}
+                      </a>
+                    ))}
+                  </span>
+                ),
             },
             {
               n: "2",

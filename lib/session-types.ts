@@ -44,6 +44,8 @@ export interface PublicSession {
   startLabel: string;
   startOrdinal: string;
   startWeekday: string;
+  endWeekday: string;
+  kickoffWeekday: string;
 }
 
 const DAY_FMT = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: "UTC" });
@@ -94,6 +96,21 @@ export function sessionStartWeekday(startsAt: string): string {
   return WEEKDAY_FMT.format(new Date(startsAt));
 }
 
+/** "Friday" — the weekday the fast ends. */
+export function sessionEndWeekday(endsAt: string): string {
+  return WEEKDAY_FMT.format(new Date(endsAt));
+}
+
+/**
+ * "Tuesday" — the evening BEFORE the fast starts, when the kick-off call
+ * happens and the last meal is eaten (fasts start at midnight).
+ */
+export function sessionKickoffWeekday(startsAt: string): string {
+  const d = new Date(startsAt);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return WEEKDAY_FMT.format(d);
+}
+
 /** "June" — used for "the next reset is in June" copy. */
 export function sessionMonth(startsAt: string): string {
   return MONTH_FMT.format(new Date(startsAt));
@@ -113,5 +130,7 @@ export function toPublicSession(row: SessionRow): PublicSession {
     startLabel: sessionStartLabel(row.starts_at),
     startOrdinal: sessionStartOrdinal(row.starts_at),
     startWeekday: sessionStartWeekday(row.starts_at),
+    endWeekday: sessionEndWeekday(row.ends_at),
+    kickoffWeekday: sessionKickoffWeekday(row.starts_at),
   };
 }

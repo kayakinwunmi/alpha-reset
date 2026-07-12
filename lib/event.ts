@@ -8,8 +8,8 @@ export const BESTDAY_URL = "https://getbestdayapp.app.link/5SerCVKw60b";
 
 export const SITE_URL = "https://www.alphareset.co";
 
-/** Time of the nightly group call, as written in copy. */
-export const GROUP_CALL_TIME = "8pm BST";
+/** Time of the nightly group call, as written in copy (season-proof — no BST/GMT). */
+export const GROUP_CALL_TIME = "8pm UK time";
 
 export const FALLBACK_SESSION = {
   id: "fallback",

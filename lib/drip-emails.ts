@@ -9,10 +9,11 @@ import { GROUP_CALL_TIME, BESTDAY_URL, SITE_URL } from "./event";
 
 /** Labels for the session an email is being sent about. */
 export interface SessionEmailCtx {
-  rangeLabel: string;    // "24–26 June 2026"
-  startOrdinal: string;  // "the 24th"
-  startWeekday: string;  // "Wednesday"
-  nextResetHint: string; // "September" or "next quarter"
+  rangeLabel: string;      // "24–26 June 2026"
+  startOrdinal: string;    // "the 24th"
+  startWeekday: string;    // "Wednesday"
+  kickoffWeekday: string;  // "Tuesday" — the evening before the fast begins
+  nextResetHint: string;   // "September" or "next quarter"
 }
 
 export interface StoryDrip {
@@ -99,17 +100,17 @@ Kay`,
     trigger: { type: "before_event", days: 2 },
     body: (name, ctx) => `Hey ${name},
 
-Alpha Reset starts in 48 hours. Midnight on ${ctx.startWeekday} ${ctx.startOrdinal}.
+Alpha Reset starts in 48 hours — midnight on ${ctx.startWeekday} ${ctx.startOrdinal}.
 
-Eat well today and tomorrow. Hydrate. Get your affairs in order.
+Eat well today. Hydrate. Get your affairs in order. Your last meal is ${ctx.kickoffWeekday} evening, by 6pm — that's your 72 hours.
 
-${ctx.startWeekday} night we have a kick-off call at ${GROUP_CALL_TIME} on the Bestday group. Be there.
+${ctx.kickoffWeekday} night, the evening before the fast begins, we have a kick-off call at ${GROUP_CALL_TIME} on the Bestday group. Be there.
 
 If you haven't joined the group yet: ${BESTDAY_URL}
 
 Remember why you signed up. Hold onto that.
 
-See you ${ctx.startWeekday} night.
+See you ${ctx.kickoffWeekday} night.
 
 Kay`,
   },

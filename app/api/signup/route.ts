@@ -152,7 +152,12 @@ export async function POST(req: NextRequest) {
     // Email — only about newly-created registrations.
     const newLines: SessionLine[] = outcomes
       .filter((o) => o.outcome !== "already")
-      .map((o) => ({ title: o.title, rangeLabel: o.rangeLabel, requested: o.outcome === "requested" }));
+      .map((o) => ({
+        sessionId: o.sessionId,
+        title: o.title,
+        rangeLabel: o.rangeLabel,
+        requested: o.outcome === "requested",
+      }));
     if (newLines.length > 0) {
       const firstNameOnly = person.first_name.split(" ")[0];
       try {
@@ -188,6 +193,7 @@ async function legacySignup(
   }
 
   const fallbackLine: SessionLine = {
+    sessionId: FALLBACK_SESSION.id,
     title: FALLBACK_SESSION.title,
     rangeLabel: sessionRangeLabel(FALLBACK_SESSION.starts_at, FALLBACK_SESSION.ends_at),
     requested: false,

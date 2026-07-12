@@ -9,6 +9,7 @@ import {
   sessionRangeLabel,
   sessionStartOrdinal,
   sessionStartWeekday,
+  sessionKickoffWeekday,
   sessionMonth,
 } from "@/lib/session-types";
 
@@ -87,6 +88,7 @@ export async function GET(req: NextRequest) {
       rangeLabel: sessionRangeLabel(session.starts_at, session.ends_at),
       startOrdinal: sessionStartOrdinal(session.starts_at),
       startWeekday: sessionStartWeekday(session.starts_at),
+      kickoffWeekday: sessionKickoffWeekday(session.starts_at),
       nextResetHint: following ? sessionMonth(following.starts_at) : "next quarter",
     };
     const startsAt = new Date(session.starts_at);
