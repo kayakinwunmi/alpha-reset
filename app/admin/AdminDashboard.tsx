@@ -41,6 +41,11 @@ export interface EmailLogRow {
   created_at: string;
 }
 
+// Most recent emails shown per person in the drawer — keeps it fast as the
+// ar_email_log table grows. (The whole quarterly journey is ~7 emails, so 50
+// comfortably covers many sessions of history.)
+const EMAILS_PER_PERSON = 50;
+
 // registrations.drip_stage 0..6
 const STAGE_LABELS = ["Registered", "Prep", "48h", "Day 1", "Day 2", "Day 3", "Complete"];
 
@@ -327,11 +332,13 @@ export function AdminDashboard({
     return m;
   }, [registrations]);
 
+  // Latest N emails per person for the drawer — emailLog is already newest-first,
+  // so the first N pushed per person are their most recent.
   const emailsByPerson = useMemo(() => {
     const m = new Map<string, EmailLogRow[]>();
     for (const e of emailLog) {
       const list = m.get(e.person_id) || [];
-      list.push(e);
+      if (list.length < EMAILS_PER_PERSON) list.push(e);
       m.set(e.person_id, list);
     }
     return m;
