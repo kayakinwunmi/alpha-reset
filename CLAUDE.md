@@ -36,13 +36,15 @@ the fallback contract.
 | `lib/admin-auth.ts` | HMAC cookie auth derived from `ADMIN_PASSWORD` (30-day sessions) |
 | `lib/email.ts` | Resend + `sendBrandedEmail` + welcome/returning/approval/decline emails |
 | `lib/email-template.ts` | Branded HTML wrapper; `textToHtml` converts plain text |
-| `lib/drip-emails.ts` | `STORY_DRIPS` (once per person) + `SESSION_DRIPS` (per registration) |
+| `lib/drip-emails.ts` | Drip **scheduling** only — `STORY_DRIPS` + `SESSION_DRIPS` (stage/trigger/slug) |
+| `lib/email-templates.ts` | **Client-safe** default subject/body + `{{token}}` metadata for every automated email; `renderTemplate` |
 | `app/page.tsx`, `app/guide/page.tsx` | Async server components, ISR `revalidate = 300` |
 | `app/api/signup` | Person upsert + per-session registrations (+ legacy fallback path) |
 | `app/api/drip` | Daily cron (8:00 UTC, `vercel.json`), bearer-guarded by `CRON_SECRET` |
 | `app/api/admin/*` | Sessions CRUD, approve/decline, broadcasts, delete — all cookie-guarded |
 | `app/admin/*` | The Ledger dashboard (client components) |
 | `ar_email_log` | Per-email send log (via `sendBrandedEmail` `log` ctx); powers the admin person-drawer history |
+| `ar_email_templates` | Admin subject/body overrides by slug; defaults live in `lib/email-templates.ts` |
 | `supabase-*.sql` | Numbered idempotent migrations, run manually in the Supabase SQL editor |
 
 ## Hard invariants — do not break these
@@ -71,6 +73,11 @@ the fallback contract.
    `log: { personId, type, sessionId? }` context to `sendBrandedEmail` records a row in
    `ar_email_log` after a successful send (best-effort — a logging failure never fails the
    email). Keep new send paths logged so the admin person-drawer's email history stays true.
+   **Content is editable**: every automated email's default subject/body lives in
+   `lib/email-templates.ts` keyed by slug; admins override them from The Ledger (stored in
+   `ar_email_templates`). Send paths resolve override-or-default via `renderFromTemplate`
+   and substitute `{{tokens}}`. Defaults must reproduce the shipped copy exactly — when you
+   change wording, change the default there, not in the send path.
 7. **Session conventions**: fasts start **midnight UTC** on the start date and end
    **18:00 UTC** on the end date (the admin form encodes this — date-only inputs).
    Copy conventions built on that: the **kick-off call and last meal are the evening

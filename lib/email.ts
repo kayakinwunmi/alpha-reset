@@ -3,6 +3,48 @@ import { renderEmail, textToHtml } from "./email-template";
 import { BESTDAY_URL, SITE_URL } from "./event";
 import { getSupabase } from "./supabase";
 import { T } from "./tables";
+import { EMAIL_TEMPLATES_BY_SLUG, renderTemplate } from "./email-templates";
+
+/** Admin overrides for email templates, keyed by slug. */
+export type TemplateOverrides = Map<string, { subject: string; body: string }>;
+
+/** Load all template overrides once (best-effort — empty if not migrated). */
+export async function loadTemplateOverrides(): Promise<TemplateOverrides> {
+  const map: TemplateOverrides = new Map();
+  try {
+    const { data } = await getSupabase().from(T.emailTemplates).select("slug, subject, body");
+    for (const r of data || []) map.set(r.slug, { subject: r.subject, body: r.body });
+  } catch (err) {
+    console.error("Template overrides load failed:", err);
+  }
+  return map;
+}
+
+/** Resolve a template to its override, or the code default. */
+export function resolveTemplate(
+  slug: string,
+  overrides?: TemplateOverrides
+): { subject: string; body: string } {
+  const override = overrides?.get(slug);
+  const def = EMAIL_TEMPLATES_BY_SLUG[slug];
+  return {
+    subject: override?.subject ?? def?.defaultSubject ?? "",
+    body: override?.body ?? def?.defaultBody ?? "",
+  };
+}
+
+/** Resolve + substitute tokens in one step. */
+export function renderFromTemplate(
+  slug: string,
+  values: Record<string, string>,
+  overrides?: TemplateOverrides
+): { subject: string; text: string } {
+  const t = resolveTemplate(slug, overrides);
+  return {
+    subject: renderTemplate(t.subject, values),
+    text: renderTemplate(t.body, values),
+  };
+}
 
 export type EmailType =
   | "welcome"
@@ -106,43 +148,33 @@ function calendarLinksText(lines: SessionLine[]): string {
   );
 }
 
+/** The conditional in-person paragraph, or empty (used by welcome/returning). */
+function inPersonNote(sessions: SessionLine[]): string {
+  return sessions.some((s) => s.requested)
+    ? "\nAbout the in-person reset: places are limited, so I confirm each one personally. You'll get an email from me either way.\n"
+    : "";
+}
+
 export async function sendWelcomeEmail(
   email: string,
   firstName: string,
   sessions: SessionLine[],
   personId: string
 ) {
-  const hasRequest = sessions.some((s) => s.requested);
-  const text = `Hey ${firstName},
-
-Welcome to Alpha Reset. You're in.
-
-Here's what you signed up for:
-
-${sessionListText(sessions)}
-
-Each reset is 72 hours. Here's what to expect:
-
-- 72-hour water fast (water & coffee only)
-- Daily walks or runs
-- Deep prayer and meditation
-- Written 90-day life review
-- Set direction for the next quarter
-
-Three things to do now:
-
-1. Read the Field Guide — how to prepare, the day-by-day protocol, and how to break the fast: ${SITE_URL}/guide
-2. Block the dates in your calendar: ${calendarLinksText(sessions)}
-3. Join the group on Bestday to connect with other Alphas: ${BESTDAY_URL}
-   (The reset itself is free — the group runs on Bestday Premium + AI, $249/year.)
-${hasRequest ? "\nAbout the in-person reset: places are limited, so I confirm each one personally. You'll get an email from me either way.\n" : ""}
-See you at the reset.
-
-Kay`;
+  const { subject, text } = renderFromTemplate(
+    "welcome",
+    {
+      name: firstName,
+      sessions: sessionListText(sessions),
+      calendar_links: calendarLinksText(sessions),
+      in_person_note: inPersonNote(sessions),
+    },
+    await loadTemplateOverrides()
+  );
 
   await sendBrandedEmail({
     to: email,
-    subject: "Welcome to Alpha Reset 🦾",
+    subject,
     text,
     preheader: "You're in. Here's how to prepare.",
     cta: { label: "Read the Field Guide", url: `${SITE_URL}/guide` },
@@ -157,20 +189,20 @@ export async function sendReturningEmail(
   sessions: SessionLine[],
   personId: string
 ) {
-  const hasRequest = sessions.some((s) => s.requested);
-  const text = `Hey ${firstName},
-
-Good to have you back. You're registered for:
-
-${sessionListText(sessions)}
-${hasRequest ? "\nAbout the in-person reset: places are limited, so I confirm each one personally. You'll get an email from me either way.\n" : ""}
-Block the dates and I'll see you there: ${calendarLinksText(sessions)}
-
-Kay`;
+  const { subject, text } = renderFromTemplate(
+    "returning",
+    {
+      name: firstName,
+      sessions: sessionListText(sessions),
+      calendar_links: calendarLinksText(sessions),
+      in_person_note: inPersonNote(sessions),
+    },
+    await loadTemplateOverrides()
+  );
 
   await sendBrandedEmail({
     to: email,
-    subject: "You're registered 🦾",
+    subject,
     text,
     preheader: "Your next Alpha Reset is booked in.",
     log: { personId, type: "returning" },
@@ -183,21 +215,20 @@ export async function sendApprovalEmail(
   session: { id?: string; title: string; rangeLabel: string; location: string | null },
   personId: string
 ) {
-  const text = `Hey ${firstName},
-
-Good news — your place is confirmed.
-
-${session.title} · ${session.rangeLabel}${session.location ? `\nLocation: ${session.location}` : ""}
-
-Details — travel, what to bring, and cost-sharing — are organised in the Bestday group, so make sure you're in: ${BESTDAY_URL}
-
-This is the one people talk about all year. Come ready.
-
-Kay`;
+  const { subject, text } = renderFromTemplate(
+    "approval",
+    {
+      name: firstName,
+      session_title: session.title,
+      dates: session.rangeLabel,
+      location_line: session.location ? `\nLocation: ${session.location}` : "",
+    },
+    await loadTemplateOverrides()
+  );
 
   await sendBrandedEmail({
     to: email,
-    subject: `Confirmed: ${session.title} 🦾`,
+    subject,
     text,
     preheader: "Your place at the in-person reset is confirmed.",
     cta: { label: "Join the group on Bestday", url: BESTDAY_URL },
@@ -211,19 +242,19 @@ export async function sendDeclineEmail(
   session: { id?: string; title: string; rangeLabel: string },
   personId: string
 ) {
-  const text = `Hey ${firstName},
-
-Thank you for requesting a place at ${session.title} (${session.rangeLabel}).
-
-Places are very limited and I couldn't fit everyone in this time — I'm sorry to say I can't confirm yours for this one.
-
-The quarterly resets are open to everyone, and I'd love to see you at the next in-person session. Stay close on Bestday: ${BESTDAY_URL}
-
-Kay`;
+  const { subject, text } = renderFromTemplate(
+    "decline",
+    {
+      name: firstName,
+      session_title: session.title,
+      dates: session.rangeLabel,
+    },
+    await loadTemplateOverrides()
+  );
 
   await sendBrandedEmail({
     to: email,
-    subject: `About your place at ${session.title}`,
+    subject,
     text,
     preheader: "An update on your in-person reset request.",
     log: { personId, type: "decline", sessionId: session.id ?? null },

@@ -4,7 +4,13 @@ import { getSupabase } from "@/lib/supabase";
 import { T } from "@/lib/tables";
 import { ADMIN_COOKIE, isValidAdminToken } from "@/lib/admin-auth";
 import type { SessionRow, RegistrationRow } from "@/lib/session-types";
-import { AdminDashboard, type Signup, type Broadcast, type EmailLogRow } from "./AdminDashboard";
+import {
+  AdminDashboard,
+  type Signup,
+  type Broadcast,
+  type EmailLogRow,
+  type TemplateOverride,
+} from "./AdminDashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +36,7 @@ export default async function AdminPage() {
     { data: registrations },
     { data: broadcasts },
     { data: emailLog },
+    { data: templateOverrides },
   ] = await Promise.all([
     supabase.from(T.signups).select("*").order("created_at", { ascending: false }),
     supabase.from(T.sessions).select("*").order("starts_at", { ascending: true }),
@@ -40,6 +47,7 @@ export default async function AdminPage() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(EMAIL_LOG_FETCH_CAP),
+    supabase.from(T.emailTemplates).select("slug, subject, body, updated_at"),
   ]);
 
   return (
@@ -49,6 +57,7 @@ export default async function AdminPage() {
       registrations={(registrations as RegistrationRow[]) || []}
       broadcasts={(broadcasts as Broadcast[]) || []}
       emailLog={(emailLog as EmailLogRow[]) || []}
+      templateOverrides={(templateOverrides as TemplateOverride[]) || []}
     />
   );
 }
