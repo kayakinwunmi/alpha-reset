@@ -9,6 +9,7 @@ import {
   sessionRangeLabel,
 } from "@/lib/session-types";
 import { SessionsPanel } from "./SessionsPanel";
+import { PersonDrawer } from "./PersonDrawer";
 import { card, btnPrimary, btnGhost, inputClass, formatDate } from "./ui";
 
 export interface Signup {
@@ -29,6 +30,21 @@ export interface Broadcast {
   audience: string;
   created_at: string;
 }
+
+export interface EmailLogRow {
+  id: string;
+  person_id: string;
+  email: string;
+  type: string;
+  subject: string;
+  session_id: string | null;
+  created_at: string;
+}
+
+// Most recent emails shown per person in the drawer — keeps it fast as the
+// ar_email_log table grows. (The whole quarterly journey is ~7 emails, so 50
+// comfortably covers many sessions of history.)
+const EMAILS_PER_PERSON = 50;
 
 // registrations.drip_stage 0..6
 const STAGE_LABELS = ["Registered", "Prep", "48h", "Day 1", "Day 2", "Day 3", "Complete"];
@@ -277,11 +293,13 @@ export function AdminDashboard({
   sessions,
   registrations,
   broadcasts,
+  emailLog,
 }: {
   signups: Signup[];
   sessions: SessionRow[];
   registrations: RegistrationRow[];
   broadcasts: Broadcast[];
+  emailLog: EmailLogRow[];
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -290,6 +308,7 @@ export function AdminDashboard({
   const [composerOpen, setComposerOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
 
   const sessionsById = useMemo(() => new Map(sessions.map((s) => [s.id, s])), [sessions]);
 
@@ -312,6 +331,18 @@ export function AdminDashboard({
     }
     return m;
   }, [registrations]);
+
+  // Latest N emails per person for the drawer — emailLog is already newest-first,
+  // so the first N pushed per person are their most recent.
+  const emailsByPerson = useMemo(() => {
+    const m = new Map<string, EmailLogRow[]>();
+    for (const e of emailLog) {
+      const list = m.get(e.person_id) || [];
+      if (list.length < EMAILS_PER_PERSON) list.push(e);
+      m.set(e.person_id, list);
+    }
+    return m;
+  }, [emailLog]);
 
   const now = Date.now();
   const nextSession = useMemo(
@@ -578,7 +609,14 @@ export function AdminDashboard({
                       className="accent-[var(--accent)]"
                     />
                   </td>
-                  <td className="p-3 text-[var(--ink)]">{s.first_name}</td>
+                  <td className="p-3">
+                    <button
+                      onClick={() => setSelectedPersonId(s.id)}
+                      className="text-[var(--ink)] hover:text-[var(--accent)] hover:underline text-left"
+                    >
+                      {s.first_name}
+                    </button>
+                  </td>
                   <td className="p-3 text-[var(--ink-light)]">
                     <a href={`mailto:${s.email}`} className="hover:text-[var(--accent)]">{s.email}</a>
                   </td>
@@ -662,6 +700,30 @@ export function AdminDashboard({
           </ul>
         )}
       </section>
+
+      {(() => {
+        const person = selectedPersonId
+          ? signups.find((s) => s.id === selectedPersonId)
+          : null;
+        if (!person) return null;
+        return (
+          <PersonDrawer
+            person={person}
+            registrations={regsByPerson.get(person.id) || []}
+            sessionsById={sessionsById}
+            broadcasts={broadcasts}
+            emailLog={emailsByPerson.get(person.id) || []}
+            onClose={() => setSelectedPersonId(null)}
+            onMessage={(p) => {
+              setSelected(new Set([p.id]));
+              setSelectedPersonId(null);
+              setComposerOpen(true);
+            }}
+            onRemove={deleteSignup}
+            removing={deletingId === person.id}
+          />
+        );
+      })()}
 
       {composerOpen && (
         <Composer

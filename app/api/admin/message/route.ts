@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
   const sent: string[] = [];
   const failed: { email: string; error: string }[] = [];
 
+  const logSessionId = sessionId && typeof sessionId === "string" ? sessionId : null;
   for (const r of recipients) {
     const firstName = r.first_name.split(" ")[0];
     try {
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
         to: r.email,
         subject: subject.replace(/\{\{name\}\}/g, firstName),
         text: body.replace(/\{\{name\}\}/g, firstName),
+        log: { personId: r.id, type: "broadcast", sessionId: logSessionId },
       });
       sent.push(r.email);
     } catch (err) {

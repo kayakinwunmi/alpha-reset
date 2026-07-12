@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
           to: person.email,
           subject: story.subject,
           text: story.body(firstName),
+          log: { personId: person.id, type: "story" },
         });
         await supabase.from(T.signups).update({ story_stage: story.stage }).eq("id", person.id);
         results.push(`${person.first_name}: ✅ story — "${story.subject}"`);
@@ -145,6 +146,7 @@ export async function GET(req: NextRequest) {
           to: person.email,
           subject: nextDrip.subject,
           text: nextDrip.body(firstName, ctx),
+          log: { personId: person.id, type: "drip", sessionId: session.id },
         });
         await supabase
           .from(T.registrations)

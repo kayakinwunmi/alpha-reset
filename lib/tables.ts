@@ -8,4 +8,5 @@ export const T = {
   sessions: "ar_sessions",
   registrations: "ar_registrations",
   messages: "ar_messages",
+  emailLog: "ar_email_log",
 } as const;
