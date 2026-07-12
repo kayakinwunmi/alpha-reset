@@ -6,8 +6,18 @@ import {
   RegistrationRow,
   sessionRangeLabel,
 } from "@/lib/session-types";
-import type { Signup, Broadcast } from "./AdminDashboard";
+import type { Signup, Broadcast, EmailLogRow } from "./AdminDashboard";
 import { btnGhost, btnPrimary, formatDate } from "./ui";
+
+const EMAIL_TYPE_LABEL: Record<string, string> = {
+  welcome: "Welcome",
+  returning: "Registration confirmed",
+  story: "Story email",
+  drip: "Countdown",
+  approval: "Place confirmed",
+  decline: "Place update",
+  broadcast: "Broadcast",
+};
 
 // Copy that mirrors lib/drip-emails.ts so we can name the emails a person has
 // received. Derived view: we know WHICH emails were sent (from drip_stage /
@@ -72,6 +82,7 @@ export function PersonDrawer({
   registrations,
   sessionsById,
   broadcasts,
+  emailLog,
   onClose,
   onMessage,
   onRemove,
@@ -81,6 +92,7 @@ export function PersonDrawer({
   registrations: RegistrationRow[];
   sessionsById: Map<string, SessionRow>;
   broadcasts: Broadcast[];
+  emailLog: EmailLogRow[];
   onClose: () => void;
   onMessage: (person: Signup) => void;
   onRemove: (person: Signup) => void;
@@ -157,6 +169,22 @@ export function PersonDrawer({
     return events;
   }, [person.story_stage, regs, broadcasts, confirmedTitles]);
 
+  // Real, exactly-dated history from ar_email_log — preferred when present.
+  const loggedEmails = useMemo<EmailEvent[]>(
+    () =>
+      emailLog.map((e) => ({
+        subject: e.subject,
+        when: formatDate(e.created_at),
+        context: e.session_id
+          ? sessionsById.get(e.session_id)?.title || EMAIL_TYPE_LABEL[e.type] || e.type
+          : EMAIL_TYPE_LABEL[e.type] || e.type,
+      })),
+    [emailLog, sessionsById]
+  );
+
+  const useLog = loggedEmails.length > 0;
+  const shownEmails = useLog ? loggedEmails : emails;
+
   const confirmedCount = regs.filter((x) => x.reg.status === "confirmed").length;
   const requestedCount = regs.filter((x) => x.reg.status === "requested").length;
 
@@ -208,7 +236,7 @@ export function PersonDrawer({
                 </p>
               </div>
               <div className="border border-[var(--rule)] py-3">
-                <p className="text-2xl font-light text-[var(--ink)] tabular-nums">{emails.length}</p>
+                <p className="text-2xl font-light text-[var(--ink)] tabular-nums">{shownEmails.length}</p>
                 <p className="font-sans text-[10px] uppercase tracking-wider text-[var(--ink-faint)] mt-1">
                   Emails
                 </p>
@@ -299,12 +327,12 @@ export function PersonDrawer({
           {/* Email history */}
           <section>
             <Label>Emails received</Label>
-            {emails.length === 0 ? (
+            {shownEmails.length === 0 ? (
               <p className="font-sans text-sm text-[var(--ink-faint)]">No emails sent yet.</p>
             ) : (
               <>
                 <ul className="space-y-2">
-                  {emails.map((e, i) => (
+                  {shownEmails.map((e, i) => (
                     <li key={i} className="flex items-baseline justify-between gap-3 font-sans text-sm">
                       <span className="text-[var(--ink)] min-w-0">
                         {e.subject}
@@ -320,11 +348,13 @@ export function PersonDrawer({
                     </li>
                   ))}
                 </ul>
-                <p className="font-sans text-[11px] text-[var(--ink-faint)] mt-3 leading-relaxed">
-                  Reconstructed from send state — only the most recent countdown email per session is
-                  individually dated. &ldquo;Selected&rdquo; broadcasts aren&apos;t attributed to
-                  individuals.
-                </p>
+                {!useLog && (
+                  <p className="font-sans text-[11px] text-[var(--ink-faint)] mt-3 leading-relaxed">
+                    Reconstructed from send state — only the most recent countdown email per session is
+                    individually dated. &ldquo;Selected&rdquo; broadcasts aren&apos;t attributed to
+                    individuals. New emails are logged exactly from here on.
+                  </p>
+                )}
               </>
             )}
           </section>

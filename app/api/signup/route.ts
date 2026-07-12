@@ -162,9 +162,9 @@ export async function POST(req: NextRequest) {
       const firstNameOnly = person.first_name.split(" ")[0];
       try {
         if (returning) {
-          await sendReturningEmail(person.email, firstNameOnly, newLines);
+          await sendReturningEmail(person.email, firstNameOnly, newLines, personId);
         } else {
-          await sendWelcomeEmail(person.email, firstNameOnly, newLines);
+          await sendWelcomeEmail(person.email, firstNameOnly, newLines, personId);
         }
       } catch (emailError) {
         console.error("Resend error:", emailError);
@@ -187,9 +187,17 @@ async function legacySignup(
   const supabase = getSupabase();
   const row = { ...person, intention };
 
-  let { error: dbError } = await supabase.from(T.signups).insert(row);
+  let { data: inserted, error: dbError } = await supabase
+    .from(T.signups)
+    .insert(row)
+    .select("id")
+    .single();
   if (dbError && (dbError.code === "42703" || dbError.code === "PGRST204")) {
-    ({ error: dbError } = await supabase.from(T.signups).insert(person));
+    ({ data: inserted, error: dbError } = await supabase
+      .from(T.signups)
+      .insert(person)
+      .select("id")
+      .single());
   }
 
   const fallbackLine: SessionLine = {
@@ -218,7 +226,9 @@ async function legacySignup(
   }
 
   try {
-    await sendWelcomeEmail(person.email, person.first_name.split(" ")[0], [fallbackLine]);
+    if (inserted?.id) {
+      await sendWelcomeEmail(person.email, person.first_name.split(" ")[0], [fallbackLine], inserted.id);
+    }
   } catch (emailError) {
     console.error("Resend error:", emailError);
   }

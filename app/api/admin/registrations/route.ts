@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest) {
   const supabase = getSupabase();
   const { data: reg, error: fetchErr } = await supabase
     .from(T.registrations)
-    .select(`id, status, person:${T.signups}(first_name, email), session:${T.sessions}(title, starts_at, ends_at, location)`)
+    .select(`id, status, person_id, session_id, person:${T.signups}(first_name, email), session:${T.sessions}(title, starts_at, ends_at, location)`)
     .eq("id", id)
     .single();
 
@@ -54,16 +54,19 @@ export async function PATCH(req: NextRequest) {
     const rangeLabel = sessionRangeLabel(session.starts_at, session.ends_at);
     try {
       if (action === "approve") {
-        await sendApprovalEmail(person.email, firstName, {
-          title: session.title,
-          rangeLabel,
-          location: session.location,
-        });
+        await sendApprovalEmail(
+          person.email,
+          firstName,
+          { id: reg.session_id, title: session.title, rangeLabel, location: session.location },
+          reg.person_id
+        );
       } else {
-        await sendDeclineEmail(person.email, firstName, {
-          title: session.title,
-          rangeLabel,
-        });
+        await sendDeclineEmail(
+          person.email,
+          firstName,
+          { id: reg.session_id, title: session.title, rangeLabel },
+          reg.person_id
+        );
       }
       emailSent = true;
     } catch (err) {

@@ -59,18 +59,20 @@ Sessions are an httpOnly HMAC cookie derived from the password — changing `ADM
 
 ## Database
 
-All tables are prefixed **`ar_`** (`ar_signups`, `ar_sessions`, `ar_registrations`, `ar_messages`) so the Supabase project can be shared with other apps. Table names are centralised in `lib/tables.ts` — if they ever change again, that's the only code file to touch.
+All tables are prefixed **`ar_`** (`ar_signups`, `ar_sessions`, `ar_registrations`, `ar_messages`, `ar_email_log`) so the Supabase project can be shared with other apps. Table names are centralised in `lib/tables.ts` — if they ever change again, that's the only code file to touch.
 
 Run in the Supabase SQL Editor (all idempotent):
 
 **Existing database (was set up before the `ar_` prefix):**
 1. `supabase-migration-3.sql` — renames your existing tables to the `ar_` names, preserving all data, constraints, and policies. Run this *before* deploying the prefixed code.
 2. `supabase-migration-2.sql` — if you haven't run it yet (sessions + registrations + backfill).
+3. `supabase-migration-4.sql` — the `ar_email_log` table (per-email send history for the admin person-drawer).
 
 **Fresh database:**
 1. `supabase-schema.sql` — base `ar_signups` table
 2. `supabase-migration.sql` — intention, drip columns, optional phone, `ar_messages` log
 3. `supabase-migration-2.sql` — `ar_sessions` + `ar_registrations`, `story_stage`, and a backfill that creates the June 2026 session and registers every existing signup for it (preserving their drip progress)
+4. `supabase-migration-4.sql` — `ar_email_log` (records every email sent, so the admin person-drawer shows a true engagement history; only captures sends made after it's applied)
 
 ## Post-deploy checklist
 

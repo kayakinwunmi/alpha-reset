@@ -42,6 +42,7 @@ the fallback contract.
 | `app/api/drip` | Daily cron (8:00 UTC, `vercel.json`), bearer-guarded by `CRON_SECRET` |
 | `app/api/admin/*` | Sessions CRUD, approve/decline, broadcasts, delete — all cookie-guarded |
 | `app/admin/*` | The Ledger dashboard (client components) |
+| `ar_email_log` | Per-email send log (via `sendBrandedEmail` `log` ctx); powers the admin person-drawer history |
 | `supabase-*.sql` | Numbered idempotent migrations, run manually in the Supabase SQL editor |
 
 ## Hard invariants — do not break these
@@ -66,7 +67,10 @@ the fallback contract.
    raw Resend calls). Two independent drip state machines:
    `ar_signups.story_stage` (story email, once per person ever) and
    `ar_registrations.drip_stage` (0→6 countdown per session, 20-hour resend guard on
-   `last_drip_at`). Broadcasts support `{{name}}` substitution.
+   `last_drip_at`). Broadcasts support `{{name}}` substitution. Every send that passes a
+   `log: { personId, type, sessionId? }` context to `sendBrandedEmail` records a row in
+   `ar_email_log` after a successful send (best-effort — a logging failure never fails the
+   email). Keep new send paths logged so the admin person-drawer's email history stays true.
 7. **Session conventions**: fasts start **midnight UTC** on the start date and end
    **18:00 UTC** on the end date (the admin form encodes this — date-only inputs).
    Copy conventions built on that: the **kick-off call and last meal are the evening

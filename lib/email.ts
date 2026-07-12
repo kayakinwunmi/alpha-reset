@@ -1,6 +1,24 @@
 import { Resend } from "resend";
 import { renderEmail, textToHtml } from "./email-template";
 import { BESTDAY_URL, SITE_URL } from "./event";
+import { getSupabase } from "./supabase";
+import { T } from "./tables";
+
+export type EmailType =
+  | "welcome"
+  | "returning"
+  | "story"
+  | "drip"
+  | "approval"
+  | "decline"
+  | "broadcast";
+
+/** Identifies the person/session an email is about, so we can log the send. */
+export interface EmailLogContext {
+  personId: string;
+  type: EmailType;
+  sessionId?: string | null;
+}
 
 let _resend: Resend | null = null;
 export function getResend(): Resend {
@@ -24,6 +42,8 @@ export async function sendBrandedEmail(opts: {
   text: string;
   preheader?: string;
   cta?: { label: string; url: string };
+  /** When set, a successful send is recorded in ar_email_log. */
+  log?: EmailLogContext;
 }) {
   const { error } = await getResend().emails.send({
     from: FROM_EMAIL,
@@ -37,6 +57,22 @@ export async function sendBrandedEmail(opts: {
     }),
   });
   if (error) throw error;
+
+  // Record the send. Best-effort: a logging failure (e.g. the ar_email_log
+  // table not migrated yet) must never turn a delivered email into an error.
+  if (opts.log) {
+    try {
+      await getSupabase().from(T.emailLog).insert({
+        person_id: opts.log.personId,
+        email: opts.to,
+        type: opts.log.type,
+        subject: opts.subject,
+        session_id: opts.log.sessionId ?? null,
+      });
+    } catch (logErr) {
+      console.error("Email-log insert failed:", logErr);
+    }
+  }
 }
 
 /** One line per session the person just registered for. */
@@ -73,7 +109,8 @@ function calendarLinksText(lines: SessionLine[]): string {
 export async function sendWelcomeEmail(
   email: string,
   firstName: string,
-  sessions: SessionLine[]
+  sessions: SessionLine[],
+  personId: string
 ) {
   const hasRequest = sessions.some((s) => s.requested);
   const text = `Hey ${firstName},
@@ -109,6 +146,7 @@ Kay`;
     text,
     preheader: "You're in. Here's how to prepare.",
     cta: { label: "Read the Field Guide", url: `${SITE_URL}/guide` },
+    log: { personId, type: "welcome" },
   });
 }
 
@@ -116,7 +154,8 @@ Kay`;
 export async function sendReturningEmail(
   email: string,
   firstName: string,
-  sessions: SessionLine[]
+  sessions: SessionLine[],
+  personId: string
 ) {
   const hasRequest = sessions.some((s) => s.requested);
   const text = `Hey ${firstName},
@@ -134,13 +173,15 @@ Kay`;
     subject: "You're registered 🦾",
     text,
     preheader: "Your next Alpha Reset is booked in.",
+    log: { personId, type: "returning" },
   });
 }
 
 export async function sendApprovalEmail(
   email: string,
   firstName: string,
-  session: { title: string; rangeLabel: string; location: string | null }
+  session: { id?: string; title: string; rangeLabel: string; location: string | null },
+  personId: string
 ) {
   const text = `Hey ${firstName},
 
@@ -160,13 +201,15 @@ Kay`;
     text,
     preheader: "Your place at the in-person reset is confirmed.",
     cta: { label: "Join the group on Bestday", url: BESTDAY_URL },
+    log: { personId, type: "approval", sessionId: session.id ?? null },
   });
 }
 
 export async function sendDeclineEmail(
   email: string,
   firstName: string,
-  session: { title: string; rangeLabel: string }
+  session: { id?: string; title: string; rangeLabel: string },
+  personId: string
 ) {
   const text = `Hey ${firstName},
 
@@ -183,5 +226,6 @@ Kay`;
     subject: `About your place at ${session.title}`,
     text,
     preheader: "An update on your in-person reset request.",
+    log: { personId, type: "decline", sessionId: session.id ?? null },
   });
 }

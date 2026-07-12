@@ -31,6 +31,16 @@ export interface Broadcast {
   created_at: string;
 }
 
+export interface EmailLogRow {
+  id: string;
+  person_id: string;
+  email: string;
+  type: string;
+  subject: string;
+  session_id: string | null;
+  created_at: string;
+}
+
 // registrations.drip_stage 0..6
 const STAGE_LABELS = ["Registered", "Prep", "48h", "Day 1", "Day 2", "Day 3", "Complete"];
 
@@ -278,11 +288,13 @@ export function AdminDashboard({
   sessions,
   registrations,
   broadcasts,
+  emailLog,
 }: {
   signups: Signup[];
   sessions: SessionRow[];
   registrations: RegistrationRow[];
   broadcasts: Broadcast[];
+  emailLog: EmailLogRow[];
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -314,6 +326,16 @@ export function AdminDashboard({
     }
     return m;
   }, [registrations]);
+
+  const emailsByPerson = useMemo(() => {
+    const m = new Map<string, EmailLogRow[]>();
+    for (const e of emailLog) {
+      const list = m.get(e.person_id) || [];
+      list.push(e);
+      m.set(e.person_id, list);
+    }
+    return m;
+  }, [emailLog]);
 
   const now = Date.now();
   const nextSession = useMemo(
@@ -683,6 +705,7 @@ export function AdminDashboard({
             registrations={regsByPerson.get(person.id) || []}
             sessionsById={sessionsById}
             broadcasts={broadcasts}
+            emailLog={emailsByPerson.get(person.id) || []}
             onClose={() => setSelectedPersonId(null)}
             onMessage={(p) => {
               setSelected(new Set([p.id]));
