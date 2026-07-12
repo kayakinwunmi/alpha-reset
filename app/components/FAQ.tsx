@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { GROUP_CALL_TIME } from "@/lib/event";
 
 const faqs = [
   {
@@ -13,7 +14,7 @@ const faqs = [
   },
   {
     q: "What happens each day?",
-    a: "Day 1 is Reset — disconnect from digital noise and face yourself. Day 2 is Reflect — review the past 90 days honestly. Day 3 is Focus — plan the next 90 days with intention and purpose. There's a group call each evening at 8pm BST.",
+    a: `Day 1 is Reset — disconnect from digital noise and face yourself. Day 2 is Reflect — review the past 90 days honestly. Day 3 is Focus — plan the next 90 days with intention and purpose. There's a group call each evening at ${GROUP_CALL_TIME}.`,
   },
   {
     q: "Is this a religious programme?",
@@ -46,7 +47,7 @@ const faqs = [
   },
   {
     q: "What's the in-person reset?",
-    a: "Once a year we do the reset together, in person — a house somewhere remote, three days over a weekend, everyone contributes to the costs. Places are limited, so you request one when you sign up and Kay confirms each place personally. People say it's the best thing they do all year.",
+    a: "Once a year we do the reset together, in person — three days in a house somewhere remote, everyone contributes to the costs. Places are limited, so you request one when you sign up and Kay confirms each place personally. People say it's the best thing they do all year.",
   },
 ];
 

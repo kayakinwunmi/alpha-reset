@@ -41,6 +41,7 @@ export async function sendBrandedEmail(opts: {
 
 /** One line per session the person just registered for. */
 export interface SessionLine {
+  sessionId: string;
   title: string;
   rangeLabel: string;
   /** true when it's an in-person session awaiting Kay's approval */
@@ -54,6 +55,19 @@ function sessionListText(lines: SessionLine[]): string {
         `- ${l.title} · ${l.rangeLabel}${l.requested ? " (in person — place requested, we'll confirm by email)" : ""}`
     )
     .join("\n");
+}
+
+/** Per-session .ics links so people block the dates of THEIR sessions. */
+function calendarLinksText(lines: SessionLine[]): string {
+  if (lines.length === 1) {
+    return `${SITE_URL}/api/calendar?session=${lines[0].sessionId}`;
+  }
+  return (
+    "\n" +
+    lines
+      .map((l) => `   - ${l.title}: ${SITE_URL}/api/calendar?session=${l.sessionId}`)
+      .join("\n")
+  );
 }
 
 export async function sendWelcomeEmail(
@@ -81,8 +95,9 @@ Each reset is 72 hours. Here's what to expect:
 Three things to do now:
 
 1. Read the Field Guide — how to prepare, the day-by-day protocol, and how to break the fast: ${SITE_URL}/guide
-2. Block the dates in your calendar: ${SITE_URL}/api/calendar
+2. Block the dates in your calendar: ${calendarLinksText(sessions)}
 3. Join the group on Bestday to connect with other Alphas: ${BESTDAY_URL}
+   (The reset itself is free — the group runs on Bestday Premium + AI, $249/year.)
 ${hasRequest ? "\nAbout the in-person reset: places are limited, so I confirm each one personally. You'll get an email from me either way.\n" : ""}
 See you at the reset.
 
@@ -110,7 +125,7 @@ Good to have you back. You're registered for:
 
 ${sessionListText(sessions)}
 ${hasRequest ? "\nAbout the in-person reset: places are limited, so I confirm each one personally. You'll get an email from me either way.\n" : ""}
-Block the dates (${SITE_URL}/api/calendar) and I'll see you there.
+Block the dates and I'll see you there: ${calendarLinksText(sessions)}
 
 Kay`;
 

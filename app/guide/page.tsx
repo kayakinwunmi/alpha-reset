@@ -203,9 +203,11 @@ export default async function GuidePage() {
         <div className="max-w-2xl mx-auto">
           <SectionLabel>The three days</SectionLabel>
           <p className="text-lg text-[var(--ink-light)] mb-12">
-            The fast begins at midnight on {next.startWeekday} and ends at 6pm on Friday.
-            There&apos;s a group call every evening at {GROUP_CALL_TIME} on Bestday — kick-off is{" "}
-            {next.startWeekday} night.
+            Eat your last meal by 6pm on {next.kickoffWeekday} evening — that&apos;s your 72
+            hours. The fast begins at midnight on {next.startWeekday} and ends at 6pm on{" "}
+            {next.endWeekday}. There&apos;s a group call every evening at {GROUP_CALL_TIME} on
+            Bestday — kick-off is {next.kickoffWeekday} night, the evening before the fast
+            begins.
           </p>
 
           {days.map((day) => (

@@ -3,6 +3,7 @@ import { Countdown } from "./components/Countdown";
 import { FAQ } from "./components/FAQ";
 import { AudioPlayer } from "./components/AudioPlayer";
 import { getOpenSessions } from "@/lib/sessions";
+import { BESTDAY_URL } from "@/lib/event";
 import { toPublicSession } from "@/lib/session-types";
 
 import Image from "next/image";
@@ -373,7 +374,7 @@ export default async function Home() {
           </p>
           <p className="text-[var(--ink-faint)] mb-10 font-sans text-sm">
             Alpha Reset is free. You&apos;ll need a{" "}
-            <a href="https://getbestdayapp.app.link/5SerCVKw60b" target="_blank" rel="noopener noreferrer" className="underline text-[var(--accent)]">
+            <a href={BESTDAY_URL} target="_blank" rel="noopener noreferrer" className="underline text-[var(--accent)]">
               Bestday Premium + AI
             </a>{" "}
             membership ($249/year) to join the group.

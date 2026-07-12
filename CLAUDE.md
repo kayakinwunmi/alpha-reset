@@ -69,18 +69,23 @@ the fallback contract.
    `last_drip_at`). Broadcasts support `{{name}}` substitution.
 7. **Session conventions**: fasts start **midnight UTC** on the start date and end
    **18:00 UTC** on the end date (the admin form encodes this — date-only inputs).
-   Status ∈ `draft | open | completed | cancelled`; only `open` + future `ends_at`
-   appears publicly. `kind = in_person` ⇒ signup creates a `requested` registration that
-   Kay approves/declines from the dashboard (emails fire on decision); `capacity` is
-   display-only — the approval queue is the real headcount control.
+   Copy conventions built on that: the **kick-off call and last meal are the evening
+   BEFORE the start date** (`sessionKickoffWeekday`), "72 hours" counts from that last
+   meal, and the `.ics` is an **all-day event** (timed UTC entries render as 1am–7pm
+   for UK users). Status ∈ `draft | open | completed | cancelled`; only `open` + future
+   `ends_at` appears publicly. `kind = in_person` ⇒ signup creates a `requested`
+   registration that Kay approves/declines from the dashboard (emails fire on
+   decision); `capacity` is display-only — the approval queue is the real headcount
+   control.
 8. **Migrations are append-only.** Never rewrite an applied `supabase-*.sql`; add the
    next number. Keep them idempotent (`IF NOT EXISTS`, conditional `DO $$` blocks). They
    are run manually (SQL editor or Supabase MCP), not by CI.
 9. **Signup anti-spam**: honeypot field + `_t` time trap return **silent success** — keep
    it that way so bots learn nothing.
-10. **Money stays off-platform.** The site never mentions amounts or takes payment;
-    retreat cost-sharing happens in the Bestday group. Don't add payment features
-    without an explicit ask.
+10. **Money stays off-platform.** The site takes no payments and never states retreat
+    prices; cost-sharing happens in the Bestday group. The one amount that IS shown
+    (site + welcome email) is the Bestday Premium + AI membership ($249/year) — keep
+    that disclosure consistent. Don't add payment features without an explicit ask.
 
 ## Environment variables
 
